@@ -3,36 +3,34 @@ import Jethro from "./Jethro";
 export default function Page() {
   return (
     <>
-      <div className="layout">
-        <aside className="sidebar" aria-label="Primary">
-          <a className="logo" href="#/apps" aria-label="Jethro home">
-            <svg viewBox="0 0 46 46" aria-hidden="true">
-              <circle cx="23" cy="23" r="20.5" fill="none" stroke="#111" strokeWidth="4" />
-              <path d="M25.5 13v0.5M25.5 20v9a5 5 0 0 1 -10 0" fill="none" stroke="#111" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-          </a>
-          <nav className="nav" id="nav"></nav>
-          <div className="sidebar-foot">
-            <button className="nav-item" id="about-btn" type="button"></button>
-            <button className="btn-outline" id="reset-btn" type="button"></button>
-          </div>
-        </aside>
-
-        <main className="main">
+      <header className="topbar" id="topbar">
+        <a className="brand" href="#/apps" aria-label="Jethro home">
+          <svg viewBox="0 0 46 46" aria-hidden="true">
+            <circle cx="23" cy="23" r="20.5" fill="none" stroke="currentColor" strokeWidth="4" />
+            <path d="M25.5 13v0.5M25.5 20v9a5 5 0 0 1 -10 0" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+          <span className="wordmark" aria-hidden="true">Jethro</span>
+        </a>
+        <div className="topbar-end">
           <div className="search-wrap">
+            <button className="search-toggle" id="search-toggle" type="button" aria-label="Search" aria-controls="q" aria-expanded="false"></button>
             <label className="search">
               <span className="sr-only">Search sites, pages or sections</span>
-              <input id="q" type="search" autoComplete="off" placeholder="Search sites, pages or sections — try “Pricing”"
+              <span className="search-ic" id="search-icon" aria-hidden="true"></span>
+              <input id="q" type="search" autoComplete="off" placeholder="Search — try “Pricing”"
                 role="combobox" aria-autocomplete="list" aria-controls="suggest" aria-expanded="false" />
               <button className="clear-q" id="clear-q" type="button" aria-label="Clear search" hidden></button>
-              <span className="kbd" id="search-icon" aria-hidden="true"></span>
             </label>
             <div className="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></div>
           </div>
-          <div className="toolbar" id="toolbar"></div>
-          <section className="view" id="view" aria-live="polite"></section>
-        </main>
-      </div>
+          <button className="top-link" id="about-btn" type="button">About</button>
+        </div>
+      </header>
+
+      <main className="main">
+        <div className="toolbar" id="toolbar"></div>
+        <section className="view" id="view" aria-live="polite"></section>
+      </main>
 
       <div className="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot viewer"></div>
 
