@@ -315,8 +315,19 @@ button.chip:hover { background: var(--surface-2); }
 }
 .section-card:hover .tile img { transform: translateY(-3px); }
 .section-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-.sentinel { display: flex; justify-content: center; margin-top: 36px; min-height: 1px; }
-.sentinel .btn-outline { width: auto; }
+
+/* ---------- Pager ---------- */
+/* Numbered page links on a .seg track, centered below the grid. */
+.pager { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 56px 0 80px; }
+.pager .seg a, .pager .seg .gap {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 30px; padding: 0 10px; border-radius: var(--r-pill);
+  color: var(--mute); font-size: 15px; font-variant-numeric: tabular-nums;
+}
+.pager .seg a:hover { color: var(--ink); }
+.pager .seg a[aria-current="page"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.pager .seg .gap { padding: 0 4px; min-width: 0; color: var(--faint); }
+.pager .seg .gap-phone, .pager-step { display: none; }
 .screen-card .cap { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 14.5px; }
 .screen-card .cap .app-logo { width: 24px; height: 24px; border-radius: 6px; font-size: 12px; }
 .screen-card .cap .app-logo i { display: none; }
@@ -499,6 +510,13 @@ dialog .row .btn-outline { width: auto; display: inline-flex; height: 37px; marg
   .topbar.search-open .search-toggle { visibility: hidden; }
   .suggest { top: 62px; left: var(--gutter); right: var(--gutter); width: auto; }
   .toolbar .sep { display: none; }
+  .pager .seg .far, .pager .seg .gap-desk { display: none; }
+  .pager .seg .gap-phone { display: inline-flex; }
+  .pager-step {
+    display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+    border-radius: var(--r-pill); background: var(--chip); color: var(--ink);
+  }
+  span.pager-step { color: var(--faint); }
   .toolbar.is-sentence { padding-top: 36px; }
   .sentence { font-size: 30px; }
   .sentence .adds { gap: 6px; }

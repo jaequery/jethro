@@ -168,6 +168,15 @@ are the facets: "Show me [💳 Pricing ▾] [pages ▾] from [🤖 AI ▾] sites
 The site page keeps a plain toolbar: its platform pills, a divider and the
 page-pattern pills.
 
+### Pager (`.pager`)
+Browse lists page through numbered links instead of infinite scroll. A `.seg`
+track centered below the grid, 56px above and 80px below it, holds the first
+and last page, the current page ±2 and `…` gaps in `--faint`. Page links are
+30px tall `<a href>` hash links with `--mute` numbers; the current page
+(`aria-current="page"`) looks like the active segment. Below 640px the ±2 pages
+drop out and 38px `--chip` prev/next arrows flank the track. One page shows no
+pager.
+
 ### Pills and menus
 37px tall, full pill, a 1px `--line` border on white, 12px left and 16px right
 padding, 9px icon gap.
