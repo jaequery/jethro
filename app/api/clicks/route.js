@@ -3,6 +3,9 @@ import { recordClicks } from "../../../lib/db";
 export const dynamic = "force-dynamic";
 
 const MAX_BATCH = 50;
+const MAX_BYTES = 32 * 1024;
+// The key prefixes lib/jethro.js sends (clickOf); anything else is dropped.
+const KINDS = /^(site|screen|section|filter|suggest|view|menu|action|lightbox|ui|nav|out):/;
 const LIMIT = 600; // clicks per address per window
 const WINDOW_MS = 10 * 60 * 1000;
 const hits = (globalThis.__jethroClickHits ??= new Map());
@@ -34,7 +37,7 @@ const text = (v, max) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 
 // One click from the client, or null when it has no usable target.
 function clean(c) {
   const target = text(c?.target, 200);
-  if (!target || !/^[a-z]+:/.test(target)) return null;
+  if (!target || !KINDS.test(target)) return null;
   const siteId = text(c.siteId, 64);
   return {
     target,
@@ -49,9 +52,12 @@ const fail = (status, message) => Response.json({ error: { message } }, { status
 // Public: records a batch of clicks sent by lib/jethro.js (navigator.sendBeacon,
 // so the body arrives as text/plain JSON). Body: { clicks: [{ target, label, view, siteId }] }.
 export async function POST(request) {
+  if (Number(request.headers.get("content-length")) > MAX_BYTES) return fail(413, "Too many clicks in one batch");
   let body;
   try {
-    body = JSON.parse(await request.text());
+    const raw = await request.text();
+    if (raw.length > MAX_BYTES) return fail(413, "Too many clicks in one batch");
+    body = JSON.parse(raw);
   } catch {
     return fail(400, "Send the clicks as JSON");
   }
