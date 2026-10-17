@@ -178,19 +178,8 @@ button.chip:hover { background: var(--surface-2); }
 .pill .x { margin: 0 -6px 0 0; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; }
 .pill .x:hover { background: var(--line-2); }
 .toolbar .sep { width: 1px; height: 22px; background: var(--line-2); margin: 0 4px; }
-/* Filter menus collapse behind this icon; the pills inside wrap like toolbar items. */
-.filters-toggle { width: 37px; padding: 0; justify-content: center; }
-.filters-toggle[aria-expanded="true"] { background: var(--surface-2); border-color: var(--line-2); }
-.filters-toggle[aria-expanded="true"] svg.i { stroke: var(--accent); }
-.filters-toggle .badge {
-  position: absolute; top: -5px; right: -5px;
-  min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill);
-  background: var(--ink); color: var(--bg); font-size: 11.5px; font-weight: 500; line-height: 18px; text-align: center;
-}
-.filter-set { display: contents; }
 .clear-link { border: 0; background: none; padding: 0 6px; cursor: pointer; color: var(--mute); font-size: 15px; }
 .clear-link:hover { color: var(--ink); }
-.toolbar .count { margin-left: auto; color: var(--mute); font-size: 14px; }
 
 .menu-wrap { position: relative; }
 .menu {
@@ -215,6 +204,51 @@ button.chip:hover { background: var(--surface-2); }
 .pill .swatch { width: 16px; height: 16px; }
 
 .view { margin-top: 30px; }
+.toolbar.is-sentence + .view { margin-top: 56px; }
+
+/* ---------- Sentence filter (browse views) ---------- */
+/* The headline is the filter; its chips scale with the display type. */
+.toolbar.is-sentence { display: block; margin: 0 auto; max-width: 1100px; padding-top: 62px; text-align: center; }
+.sentence {
+  font-size: 52px; font-weight: 500; line-height: 1.45; letter-spacing: var(--track-display);
+  color: var(--ink); text-wrap: balance;
+}
+.sentence .chip {
+  height: auto; padding: 0 0.3em; gap: 0.18em;
+  font: inherit; letter-spacing: inherit; line-height: 1.22; vertical-align: baseline;
+}
+.sentence .chip .val { color: var(--faint); }
+.sentence .chip.is-set .val, .sentence .chip.noun .val { color: var(--ink); }
+.sentence .caret { font-size: 0.42em; color: var(--faint); margin-left: 0.15em; }
+.sentence .emo { font-size: 0.8em; line-height: 1; }
+.sentence .swatch { width: 0.6em; height: 0.6em; }
+/* A set secondary chip and its clear (×) read as one pill. */
+.sentence .has-x {
+  display: inline-flex; align-items: stretch; vertical-align: baseline;
+  border-radius: var(--r-pill); background: var(--chip); line-height: 1.22;
+}
+.sentence .has-x .chip { padding-right: 0.1em; background: none; border-radius: var(--r-pill) 0 0 var(--r-pill); }
+.sentence .has-x .chip:hover { background: var(--surface-2); }
+.chip-x {
+  display: grid; place-items: center; padding: 0 0.26em 0 0.12em; border: 0;
+  border-radius: 0 var(--r-pill) var(--r-pill) 0; background: none; color: var(--mute); cursor: pointer;
+}
+.chip-x:hover { background: var(--surface-2); color: var(--ink); }
+.chip-x svg.i { width: 0.42em; height: 0.42em; }
+.sentence .adds { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 8px; vertical-align: middle; margin-left: 4px; }
+.sentence .chip.add {
+  height: 36px; padding: 0 14px; font-size: 15px; font-weight: 400; letter-spacing: var(--track); line-height: 1;
+  background: none; border: 1px dashed var(--line-2); color: var(--mute);
+}
+.sentence .chip.add:hover { background: var(--surface); color: var(--ink); }
+/* Menus inside the sentence keep the UI type, centred under their chip. */
+.sentence .menu {
+  left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px);
+  font-size: 15px; font-weight: 400; line-height: 1.4; letter-spacing: var(--track); text-align: left;
+}
+.sentence-sub { margin: 14px 0 0; color: var(--mute); font-size: 17px; }
+.sentence-sub .clear-link { font-size: 17px; margin-left: 10px; text-decoration: underline; text-underline-offset: 3px; }
+
 
 /* ---------- App cards ---------- */
 .app-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 52px 16px; }
@@ -450,7 +484,6 @@ dialog .row .btn-outline { width: auto; display: inline-flex; height: 37px; marg
   .section-grid { grid-template-columns: 1fr; }
   .section-strip { grid-auto-columns: 78%; }
   .lb-stage { grid-template-columns: 44px 1fr 44px; padding: 0 4px 16px; }
-  .toolbar .count { width: 100%; margin: 6px 0 0; }
   .admin-table thead { display: none; }
   .admin-table tr { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .admin-table td { padding: 0; border: 0; }
@@ -484,4 +517,18 @@ dialog .row .btn-outline { width: auto; display: inline-flex; height: 37px; marg
     border-radius: var(--r-pill); background: var(--chip); color: var(--ink);
   }
   span.pager-step { color: var(--faint); }
+  .toolbar.is-sentence { padding-top: 36px; }
+  .sentence { font-size: 30px; }
+  .sentence .adds { gap: 6px; }
+  .sentence .chip.add { height: 32px; padding: 0 12px; font-size: 14.5px; }
+  .sentence-sub { font-size: 15px; }
+  .sentence-sub .clear-link { font-size: 15px; }
+  /* Menus open as a bottom sheet that stays on screen. */
+  .sentence .menu {
+    position: fixed; top: auto; left: 0; right: 0; bottom: 0; transform: none;
+    width: auto; max-width: none; max-height: 70vh; margin: 0 !important;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+    border-radius: var(--r-card) var(--r-card) 0 0;
+  }
+  .sentence .menu button { height: 44px; }
 }
