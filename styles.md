@@ -21,22 +21,21 @@ Every neutral sits in one warm family: greys lean slightly yellow, never blue.
 | `--bg` | `#FFFFFF` | Page background, active segment, popovers |
 | `--ink` | `#141414` | Primary text, the mark, primary button fill, logo tiles |
 | `--ink-2` | `#3D3C39` | Secondary body text (dialogs, fact chips) |
-| `--mute` | `#8A8A87` | Top-bar links, placeholders, inactive segments and pills, captions |
+| `--mute` | `#8A8A87` | Top-bar links, placeholders, inactive segments and pills, card captions after the name |
 | `--faint` | `#B4B3AE` | Tertiary text: counts in menus, trailing icons |
-| `--chip` | `#F0EFEC` | Fill of chips, segmented-control tracks and the search field |
-| `--surface` | `#F7F6F3` | Hover fill, screen tiles |
-| `--surface-2` | `#EFEEE9` | Pressed or set state, tile hover, chip hover |
-| `--line` | `#E8E7E3` | Hairline borders on pills, menus and dialogs |
-| `--line-2` | `#DCDBD6` | Borders on active or selected items, outline button |
+| `--chip` | `#F0EFEC` | Fill of chips, segmented-control tracks, the search field, and card frames behind phone shots, section crops and skeletons |
+| `--surface` | `#F7F6F3` | Hover fill |
+| `--surface-2` | `#EFEEE9` | Pressed or set state, chip hover |
+| `--line` | `#E8E7E3` | Hairline borders on pills, menus, dialogs and card frames |
+| `--line-2` | `#DCDBD6` | Borders on active or selected items, outline button, hovered card frames |
 | `--accent` | `#F2622E` | The only accent. It colors the **icon** of an active item or pill and the focus ring. It is never a surface fill. |
 | `--scrim` | `rgba(12,12,12,.9)` | Lightbox backdrop |
 
 Emoji may appear inside filter chips as content (for example "💳 Pricing").
 They are data, not an accent, and they never replace `--accent` for state.
 
-**Card backdrops.** Each site has a two-stop tone (`tone_a`, `tone_b`) from the
-pipeline, drawn as `radial-gradient(120% 110% at 50% 45%, t1, t2)` with a soft
-dark vignette on top. These colors are data, not theme tokens.
+Cards have no backdrop color: a screenshot sits in a white frame with a
+`--line` hairline, and phone shots, section crops and skeletons sit on `--chip`.
 
 ## 2. Typography
 
@@ -60,7 +59,7 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Top-bar link ("About") | 17px | 400 | `--mute` → `--ink` on hover | |
 | Search input | 16px | 400 | `--ink` (placeholder `--mute`) | |
 | Chip, segment, pill label | 15px | 400 | `--ink` / `--mute` | Inactive segments and pills are `--mute` |
-| Site name (card) | 20px | 500 | `--ink` | `--track-tight`, line-height 1.2 |
+| Card caption | 15px | 400 | `--mute` | One line with ellipsis; the lead name is 500 in `--ink` |
 | Tagline, caption | 14.5px | 400 | `--mute` | |
 | Detail title | 30px | 500 | `--ink` | |
 | Menu item | 14.5px | 400 | `--ink` | Count at 12.5px in `--faint` |
@@ -76,8 +75,7 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Sentence filter | max-width 1100px, centred, ~70px above it | 56px from the sentence's count line to the grid |
 | Detail toolbar gap | 6px | Plus a 1×22px divider after the platform pills (hidden on phones) |
 | Toolbar to content | 30px | On the site page |
-| Site grid | 2 columns, 16px column gap, 52px row gap | 1 column at ≤860px |
-| Screen grid | auto-fill, min 200px, 16px column gap, 36px row gap | 2 columns at ≤860px |
+| Browse grid (sites, pages, sections) | 4 columns, 22px column gap, 36px row gap | 3 columns below 1280px, 2 below 960px, 1 below 560px |
 
 White space is the main ornament: prefer more room over more dividers.
 
@@ -85,10 +83,10 @@ White space is the main ornament: prefer more room over more dividers.
 
 | Token | Value | Use |
 |---|---|---|
-| `--r-sm` | 8px | Web screenshot inside a card, menu items |
-| `--r-md` | 10px | Buttons, logo tiles, phone screenshots |
-| `--r-lg` | 14px | Menus, large logo, lightbox shot |
-| `--r-card` | 24px | Card frames, screen tiles, dialog |
+| `--r-sm` | 8px | Phone screenshot inside a card, menu items |
+| `--r-md` | 10px | Buttons, logo tiles |
+| `--r-lg` | 14px | Card frames, menus, large logo, lightbox shot |
+| `--r-card` | 24px | Dialog |
 | `--r-pill` | 999px | Search, chips, segmented controls, pills |
 
 The top bar has no border. Chips, segments and the search field have no border
@@ -96,8 +94,6 @@ either; their `--chip` fill is the edge. Other borders are 1px hairlines
 (`--line` / `--line-2`). The only shadows are:
 
 - the active segment: `0 1px 3px rgba(0,0,0,.1)`
-- a lifted screenshot inside a card frame: `0 10px 30px rgba(0,0,0,.18)`
-- a screenshot inside a tile: `0 1px 2px rgba(0,0,0,.06), 0 6px 18px rgba(0,0,0,.06)`
 - popovers: `--shadow-pop` = `0 12px 32px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.05)`
 
 ## 5. Iconography
@@ -187,38 +183,44 @@ padding, 9px icon gap.
 - The **menu** is a white popover with a `--line` border, `--r-lg` and
   `--shadow-pop`, 6px below its pill. Items are 34px tall with a count on the right.
 
-### Site card
-- **Frame**: aspect ratio 511 / 314, `--r-card`, the site's tone gradient and
-  vignette.
-- **Desktop cover**: the 16:10 home-page screenshot inset 5.9% left and 9.6%
-  top/bottom, `--r-sm`, lifted shadow. Centred when the site has no mobile screen.
-- **Mobile cover**: a 9:19.5 phone screenshot, 72% of the frame tall,
-  overlapping the desktop cover at the right, `--r-md`.
-- On hover the screenshot rises 4px and scales to 1.01 over 0.35s.
-- **Meta row**: a 45px `--ink` initial tile (never the site's own logo), then
-  the name over "domain — tagline" in `--mute`. The source domain is always shown.
-
-### Screen and section tiles
-A 4/5 tile with a `--surface` fill, `--r-card` and 22px padding, screenshot
-centred. Section tiles are 16:10 with the crop fitted at its own aspect. The
-caption shows a 24px initial tile, the site name (500) and the pattern (`--mute`).
+### Cards (`.card`)
+Site, page and section cards share one shape: a **frame** and a **caption**.
+- **Frame** (`.frame`): 16:10, `--r-lg`, a 1px `--line` hairline,
+  `overflow: hidden`, no shadow and no backdrop. A desktop shot fills it edge
+  to edge, cropped from the top. A phone shot (`.is-mobile`) sits centred on
+  `--chip` at 86% of the frame height with `--r-sm`. A section crop
+  (`.is-section`) is full width on `--chip`, centred when short and cropped from
+  the top when tall. Skeletons are the same frame on `--chip`.
+- **Caption** (`.cap`): one 15px line with ellipsis, 12px below the frame. The
+  lead is 500 `--ink`, then ` · `-separated details in `--mute`:
+  - site card: **Name** · industry · domain (desktop shot only; phone shot when
+    the site has no desktop one)
+  - page card: **Site** · pattern · domain
+  - section card: **Site** · section type
+  - on a site's own page: **Pattern** · path, or **Section type** · path
+- No logo tile on cards, and never the site's own logo. The source domain is
+  shown on every site and page card.
+- **Hover**: the frame border goes to `--line-2` and the image scales to 1.015
+  over 0.2s. `prefers-reduced-motion` turns the scale off.
 
 ### Site detail, lightbox, dialogs
 Unchanged by the top-bar redesign for now: a back link, 64px logo tile and 30px
 title, fact chips, and the source credit; a full-screen `--scrim` lightbox with
 Esc / ← / → and a focus trap; dialogs with `--r-card` and `--shadow-pop`.
 
-### Empty state
-Centred: a "No matches" title (22/500) and a muted line, with an outline
-"Clear filters" button.
+### Empty and error states
+Centred: a display title (28px/500, `--track-display`), a muted line, and a
+`.chip` button with an icon ("Clear filters", "Try again"). "No sites yet" has
+no button. The "Couldn't load more" retry under a list is a `.chip` too.
 
 ## 7. Motion
-Short and quiet. Hover lifts take 0.3–0.35s ease, fills 0.2s, the search
-field's width 0.2s. No entrance animation.
+Short and quiet. Card hover (border and 1.015 image scale) takes 0.2s ease,
+fills 0.2s, the search field's width 0.2s. No entrance animation, and no scale
+under `prefers-reduced-motion`.
 
 ## 8. Responsive
 - **≤1100px**: the gutter shrinks to 24px.
-- **≤860px**: the site grid becomes 1 column and the screen grid 2 columns.
+- **<1280px / <960px / <560px**: the browse grids go to 3, 2 and 1 columns.
 - **≤640px**: the gutter is 16px, the search field hides behind its icon, and
   the toolbar divider is hidden. The top bar must fit at 375px.
 - There is never any horizontal page scroll.
