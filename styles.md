@@ -73,8 +73,9 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Top bar padding | 24px × `--gutter` | 16px tall padding on phones |
 | Top-bar end gap | 40px | Between search and About; 20px on phones |
 | Brand gap | 10px | Between the mark and the wordmark |
-| Toolbar gap | 6px | Plus a 1×22px divider after the view switch (hidden on phones) |
-| Toolbar to content | 30px | |
+| Sentence filter | max-width 1100px, centred, ~70px above it | 56px from the sentence's count line to the grid |
+| Detail toolbar gap | 6px | Plus a 1×22px divider after the platform pills (hidden on phones) |
+| Toolbar to content | 30px | On the site page |
 | Site grid | 2 columns, 16px column gap, 52px row gap | 1 column at ≤860px |
 | Screen grid | auto-fill, min 200px, 16px column gap, 36px row gap | 2 columns at ≤860px |
 
@@ -137,14 +138,35 @@ an 8px gap. As a `<button>` it takes `--surface-2` on hover.
 A `--chip` track with 4px padding and `--r-pill`. Segments are 30px tall
 buttons with 14px side padding and `--mute` labels. The active segment
 (`aria-pressed="true"`) is `--bg` white with `--ink` text and
-`0 1px 3px rgba(0,0,0,.1)`. The browse toolbar's Sites / Screens / Sections
-switch is a `.seg`.
+`0 1px 3px rgba(0,0,0,.1)`.
 
-### Toolbar
-The `.seg` view switch, a divider, the **Platform** menu pill, the filters
-toggle (its menus stay collapsed until opened), and a small "Clear" text link
-(`.clear-link`, `--mute`) while any filter or query is set. The result count
-sits at the far right in `--mute`.
+### Sentence filter (`.sentence`)
+On the browse views the headline is the filter, a centred sentence whose chips
+are the facets: "Show me [💳 Pricing ▾] [pages ▾] from [🤖 AI ▾] sites, on
+[🖥️ desktop ▾]". Sites lead with Industry ("Show me [AI ▾] [sites ▾] on
+[any device ▾]"); sections lead with Section type.
+- Type: 52px / 500, `--track-display`, line-height 1.45, `--ink`; 30px at
+  ≤640px. It wraps naturally, and a connecting word never wraps away from its chip.
+- Chips are `.chip` at the sentence's size, ending in a `▾` in `--faint`. An
+  unset facet reads "all", "any" or "any device" in `--faint`; a set one reads in
+  `--ink` with its emoji (from `lib/taxonomy-emoji.js`, never hard-coded in the
+  render code), a country flag, or a color swatch dot.
+- The view noun (sites / pages / sections) is a chip too.
+- Secondary facets (page type or section where they are not the lead, color,
+  theme, country) wait at the end as dashed `+ color` add-chips at UI size
+  (36px, 15px, `--line-2` dashed border, `--mute`). Once set they join the
+  sentence ("in [● blue ×]", "in [🌙 dark ×] mode", "from [🇯🇵 Japan ×]") with a
+  clear (×) in place of the caret. A search query reads "matching [“pricing” ×]".
+- Under it, one 17px `--mute` line: the count and the source promise ("214
+  pages · every screenshot links back to its source"), plus an underlined
+  "Clear" (`.clear-link`) while any filter or query is set.
+- The sentence is a `role="group"` with an `aria-label`; each chip's accessible
+  name is "Facet: value" (e.g. "Industry: AI").
+- Menus keep the UI type, open centred under their chip and are nudged inside
+  the window; at ≤640px they open as a full-width bottom sheet.
+
+The site page keeps a plain toolbar: its platform pills, a divider and the
+page-pattern pills.
 
 ### Pills and menus
 37px tall, full pill, a 1px `--line` border on white, 12px left and 16px right
