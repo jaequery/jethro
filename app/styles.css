@@ -364,6 +364,7 @@ dialog .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .admin a:not(.nav-item):not(.btn-outline):not(.btn-small):not(.logo):hover { text-decoration: underline; }
 .admin-search { height: 46px; margin-bottom: 18px; }
 .admin-search input { font-size: 16px; }
+.admin-range { margin-bottom: 14px; }
 .admin-notice { padding: 10px 14px; border: 1px solid var(--line-2); border-radius: var(--r-md); background: var(--surface); font-size: 14.5px; }
 .admin-notice.error { border-color: var(--ink); }
 .admin-jobs { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
