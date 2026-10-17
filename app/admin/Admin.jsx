@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { INDUSTRIES, PAGE_PATTERNS, SECTION_TYPES } from "../../lib/taxonomy";
 
 // The local admin. View state lives in the hash: #/queue, #/discovered,
-// #/approved, #/rejected, #/removals, #/seeds and #/site/<id>; anything else
+// #/approved, #/rejected, #/removals, #/clicks, #/seeds and #/site/<id>; anything else
 // falls back to the queue. Data comes from app/api/admin/**.
 const TABS = [
   ["queue", "Queue"], ["discovered", "Discovered"], ["approved", "Approved"], ["rejected", "Rejected"],
-  ["removals", "Removal requests"], ["seeds", "Add seeds"],
+  ["removals", "Removal requests"], ["clicks", "Most clicked"], ["seeds", "Add seeds"],
 ];
 
 function readHash() {
@@ -111,6 +111,7 @@ export default function Admin() {
         {notice && <p className={`admin-notice ${notice.kind}`} role="status">{notice.text}</p>}
         {route.view === "site" ? <SiteEdit id={route.id} {...ctx} />
           : route.view === "removals" ? <Removals {...ctx} />
+          : route.view === "clicks" ? <Clicks {...ctx} />
           : route.view === "seeds" ? <Seeds {...ctx} />
           : <SiteList tab={route.view} {...ctx} />}
       </main>
@@ -380,6 +381,50 @@ function Removals({ tick, act }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+const CLICK_RANGES = [["day", "24 hours"], ["week", "7 days"], ["month", "30 days"], ["all", "All time"]];
+
+// What visitors click most on the public library (recorded by lib/jethro.js).
+function Clicks({ tick }) {
+  const [range, setRange] = useState("week");
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    let live = true;
+    setError(null);
+    api(`clicks?range=${range}`).then((d) => live && setData(d), (err) => live && setError(err.message));
+    return () => { live = false; };
+  }, [range, tick]);
+  return (
+    <>
+      <div className="seg admin-range" role="group" aria-label="Range">
+        {CLICK_RANGES.map(([k, label]) => (
+          <button key={k} type="button" aria-pressed={range === k} onClick={() => setRange(k)}>{label}</button>
+        ))}
+      </div>
+      {error && <p className="admin-notice error">{error}</p>}
+      {!data && !error && <p className="mute">Loading…</p>}
+      {data && <p className="mute">{data.totals.clicks} clicks on {data.totals.targets} items{data.since ? ` since ${date(data.since)}` : ""}</p>}
+      {data && !data.items.length && <div className="empty"><h2>No clicks yet</h2><div>Clicks on the library show up here.</div></div>}
+      {data?.items.length > 0 && (
+        <table className="admin-table">
+          <thead><tr><th>#</th><th>Item</th><th>Site</th><th>Clicks</th><th>Last clicked</th></tr></thead>
+          <tbody>
+            {data.items.map((c, i) => (
+              <tr key={c.target}>
+                <td className="mute">{i + 1}</td>
+                <td><b>{c.label || c.target}</b><div className="mute">{c.target}</div></td>
+                <td>{c.site ? <a href={`#/site/${c.site.id}`}>{c.site.name}</a> : <span className="mute">—</span>}</td>
+                <td><b>{c.clicks}</b></td>
+                <td className="mute">{date(c.lastAt)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
   );
 }
 
