@@ -265,18 +265,9 @@ a.chip-outline:hover { background: var(--surface); }
 @media (prefers-reduced-motion: reduce) {
   .card:hover .frame img { transform: none; }
 }
-/* ---------- Pager ---------- */
-/* Numbered page links on a .seg track, centered below the grid. */
-.pager { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 56px 0 80px; }
-.pager .seg a, .pager .seg .gap {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 30px; height: 30px; padding: 0 10px; border-radius: var(--r-pill);
-  color: var(--mute); font-size: 15px; font-variant-numeric: tabular-nums;
-}
-.pager .seg a:hover { color: var(--ink); }
-.pager .seg a[aria-current="page"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
-.pager .seg .gap { padding: 0 4px; min-width: 0; color: var(--faint); }
-.pager .seg .gap-phone, .pager-step { display: none; }
+/* ---------- Infinite scroll ---------- */
+/* Empty marker below the grid; holds the retry chip when a batch fails. */
+.sentinel { display: flex; justify-content: center; margin: 36px 0 80px; min-height: 1px; }
 
 /* ---------- Site page ---------- */
 .back { display: inline-flex; align-items: center; gap: 6px; color: var(--mute); font-size: 14.5px; border: 0; background: none; cursor: pointer; padding: 0; }
@@ -484,13 +475,6 @@ dialog .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .group-title { margin: 56px 0 24px; font-size: 24px; }
   .lb-bar { padding: 12px; gap: 8px; }
   dialog { padding: 24px; }
-  .pager .seg .far, .pager .seg .gap-desk { display: none; }
-  .pager .seg .gap-phone { display: inline-flex; }
-  .pager-step {
-    display: grid; place-items: center; width: 38px; height: 38px; flex: none;
-    border-radius: var(--r-pill); background: var(--chip); color: var(--ink);
-  }
-  span.pager-step { color: var(--faint); }
   .toolbar.is-sentence { padding-top: 36px; }
   .sentence { font-size: 30px; }
   .sentence .adds { gap: 6px; }

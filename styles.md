@@ -163,14 +163,13 @@ are the facets: "Show me [💳 Pricing ▾] [pages ▾] from [🤖 AI ▾] sites
 - Menus keep the UI type, open centred under their chip and are nudged inside
   the window; at ≤640px they open as a full-width bottom sheet.
 
-### Pager (`.pager`)
-Browse lists page through numbered links instead of infinite scroll. A `.seg`
-track centered below the grid, 56px above and 80px below it, holds the first
-and last page, the current page ±2 and `…` gaps in `--faint`. Page links are
-30px tall `<a href>` hash links with `--mute` numbers; the current page
-(`aria-current="page"`) looks like the active segment. Below 640px the ±2 pages
-drop out and 38px `--chip` prev/next arrows flank the track. One page shows no
-pager.
+### Infinite scroll (`.sentinel`)
+Browse lists load in batches: the first replaces the skeleton cards, then an
+empty `.sentinel` below the grid (36px above, 80px below) triggers the next batch
+when it comes within 1200px of the viewport. A loading batch shows skeleton
+cards at the end of the grid. A failed batch shows a `.chip` "Couldn’t load
+more — try again" in the sentinel. Once the list ends the sentinel is removed.
+There is no page number in the URL.
 
 ### Menus
 The **menu** is a white popover with a `--line` border, `--r-lg` and
