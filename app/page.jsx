@@ -60,7 +60,7 @@ export default function Page() {
           <p className="form-status" id="removal-status" role="status"></p>
           <div className="row">
             <button className="btn-primary" type="submit">Send request</button>
-            <button className="btn-outline" type="button" id="removal-close">Close</button>
+            <button className="chip" type="button" id="removal-close">Close</button>
           </div>
         </form>
       </dialog>

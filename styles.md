@@ -19,7 +19,7 @@ Every neutral sits in one warm family: greys lean slightly yellow, never blue.
 | Token | Value | Use |
 |---|---|---|
 | `--bg` | `#FFFFFF` | Page background, active segment, popovers |
-| `--ink` | `#141414` | Primary text, the mark, primary button fill, logo tiles |
+| `--ink` | `#141414` | Primary text, the mark, primary button fill, the active page-pattern chip on the site page |
 | `--ink-2` | `#3D3C39` | Secondary body text (dialogs, fact chips) |
 | `--mute` | `#8A8A87` | Top-bar links, placeholders, inactive segments and pills, card captions after the name |
 | `--faint` | `#B4B3AE` | Tertiary text: counts in menus, trailing icons |
@@ -27,9 +27,11 @@ Every neutral sits in one warm family: greys lean slightly yellow, never blue.
 | `--surface` | `#F7F6F3` | Hover fill |
 | `--surface-2` | `#EFEEE9` | Pressed or set state, chip hover |
 | `--line` | `#E8E7E3` | Hairline borders on pills, menus, dialogs and card frames |
-| `--line-2` | `#DCDBD6` | Borders on active or selected items, outline button, hovered card frames |
+| `--line-2` | `#DCDBD6` | Borders on active or selected items, outlined chips, hovered card frames |
 | `--accent` | `#F2622E` | The only accent. It colors the **icon** of an active item or pill and the focus ring. It is never a surface fill. |
 | `--scrim` | `rgba(12,12,12,.9)` | Lightbox backdrop |
+| `--chip-dark` | `rgba(240,239,236,.14)` | `--chip` on the dark scrim: the lightbox's domain chip and round buttons |
+| `--chip-dark-2` | `rgba(240,239,236,.24)` | Their hover fill |
 
 Emoji may appear inside filter chips as content (for example "💳 Pricing").
 They are data, not an accent, and they never replace `--accent` for state.
@@ -61,7 +63,8 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Chip, segment, pill label | 15px | 400 | `--ink` / `--mute` | Inactive segments and pills are `--mute` |
 | Card caption | 15px | 400 | `--mute` | One line with ellipsis; the lead name is 500 in `--ink` |
 | Tagline, caption | 14.5px | 400 | `--mute` | |
-| Detail title | 30px | 500 | `--ink` | |
+| Site name (site page) | 48px | 500 | `--ink` | `--track-display`; 36px at ≤640px |
+| Group title ("Sections"), dialog title | 28px | 500 | `--ink` | `--track-display`; group title 24px at ≤640px |
 | Menu item | 14.5px | 400 | `--ink` | Count at 12.5px in `--faint` |
 
 ## 3. Spacing and layout
@@ -73,8 +76,7 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Top-bar end gap | 40px | Between search and About; 20px on phones |
 | Brand gap | 10px | Between the mark and the wordmark |
 | Sentence filter | max-width 1100px, centred, ~70px above it | 56px from the sentence's count line to the grid |
-| Detail toolbar gap | 6px | Plus a 1×22px divider after the platform pills (hidden on phones) |
-| Toolbar to content | 30px | On the site page |
+| Site page | Back link, then the header 40px below, controls 48px below it, attribution 20px below, grid 40px below | Header max-width 900px, centred |
 | Browse grid (sites, pages, sections) | 4 columns, 22px column gap, 36px row gap | 3 columns below 1280px, 2 below 960px, 1 below 560px |
 
 White space is the main ornament: prefer more room over more dividers.
@@ -84,10 +86,10 @@ White space is the main ornament: prefer more room over more dividers.
 | Token | Value | Use |
 |---|---|---|
 | `--r-sm` | 8px | Phone screenshot inside a card, menu items |
-| `--r-md` | 10px | Buttons, logo tiles |
-| `--r-lg` | 14px | Card frames, menus, large logo, lightbox shot |
-| `--r-card` | 24px | Dialog |
-| `--r-pill` | 999px | Search, chips, segmented controls, pills |
+| `--r-md` | 10px | Admin buttons |
+| `--r-lg` | 14px | Card frames, menus, lightbox shot, dialog textarea |
+| `--r-card` | 24px | Dialogs, the phone bottom sheet |
+| `--r-pill` | 999px | Search, chips, segmented controls, dialog inputs and buttons |
 
 The top bar has no border. Chips, segments and the search field have no border
 either; their `--chip` fill is the edge. Other borders are 1px hairlines
@@ -161,9 +163,6 @@ are the facets: "Show me [💳 Pricing ▾] [pages ▾] from [🤖 AI ▾] sites
 - Menus keep the UI type, open centred under their chip and are nudged inside
   the window; at ≤640px they open as a full-width bottom sheet.
 
-The site page keeps a plain toolbar: its platform pills, a divider and the
-page-pattern pills.
-
 ### Pager (`.pager`)
 Browse lists page through numbered links instead of infinite scroll. A `.seg`
 track centered below the grid, 56px above and 80px below it, holds the first
@@ -173,15 +172,9 @@ and last page, the current page ±2 and `…` gaps in `--faint`. Page links are
 drop out and 38px `--chip` prev/next arrows flank the track. One page shows no
 pager.
 
-### Pills and menus
-37px tall, full pill, a 1px `--line` border on white, 12px left and 16px right
-padding, 9px icon gap.
-- Inactive: `--mute` label with an `--ink` icon.
-- Active or set (`aria-pressed="true"` / `.is-set`): `--surface-2` fill, a
-  `--line-2` border, an `--ink` label and an `--accent` icon.
-- Menu pills end in a chevron; once a value is set it becomes a clear (×).
-- The **menu** is a white popover with a `--line` border, `--r-lg` and
-  `--shadow-pop`, 6px below its pill. Items are 34px tall with a count on the right.
+### Menus
+The **menu** is a white popover with a `--line` border, `--r-lg` and
+`--shadow-pop`, 6px below its chip. Items are 34px tall with a count on the right.
 
 ### Cards (`.card`)
 Site, page and section cards share one shape: a **frame** and a **caption**.
@@ -203,10 +196,41 @@ Site, page and section cards share one shape: a **frame** and a **caption**.
 - **Hover**: the frame border goes to `--line-2` and the image scales to 1.015
   over 0.2s. `prefers-reduced-motion` turns the scale off.
 
-### Site detail, lightbox, dialogs
-Unchanged by the top-bar redesign for now: a back link, 64px logo tile and 30px
-title, fact chips, and the source credit; a full-screen `--scrim` lightbox with
-Esc / ← / → and a focus trap; dialogs with `--r-card` and `--shadow-pop`.
+### Site page (`#/app/<id>`)
+- **Back link** (`.back`): "← All sites", 14.5px `--mute` text, top-left under
+  the top bar.
+- **Header** (`.site-head`), centred: the site name as display type (48px/500,
+  `--track-display`), the tagline in `--mute` (17px) below it, then a wrapping row
+  of fact chips (`.site-facts`, `.chip` in `--ink-2`): the industry with its
+  emoji, the country with its flag, and "N pages". It ends in an outlined
+  "Visit domain.com ↗" chip (`.chip-outline`: no fill, a `--line-2` border)
+  linking to the source. No logo tile, ours or the site's.
+- **Controls** (`.site-controls`), centred: a `.seg` platform switch
+  (Desktop | Mobile, only the platforms the site has), then a wrapping row of
+  `.chip` buttons for the page patterns present on that platform, led by "All
+  pages", each with its pattern emoji. The active chip is an `--ink` fill with
+  white text.
+- **Attribution** (`.attribution`): "Screenshots captured … from domain", 14.5px
+  `--mute`, centred, the domain underlined in `--ink-2`.
+- The Pages and Sections grids are the browse grids and cards. "Sections" is a
+  `.group-title`: 28px/500, centred, 72px above the grid it heads.
+
+### Lightbox
+A full-screen `--scrim` with Esc / ← / → and a focus trap; focus returns to the
+card that opened it. The bar: the site name at 500 over a `--mute` caption
+(type · path · platform · "2 of 9", one line with ellipsis), then the domain as a
+`.chip` link on `--chip-dark` with white text, and a round 40px close button.
+The round prev / next buttons share the `--chip-dark` fill (`--chip-dark-2` on
+hover). The shot sits in a white `--r-lg` frame and scrolls inside it.
+
+### Dialogs (About, Request removal)
+`--r-card` (24px), a `--line` hairline, `--shadow-pop`, 32px padding (24px on
+phones), at most 460px wide. The title is display type (28px/500,
+`--track-display`), the body `--ink-2`. Inputs are 44px `--r-pill` fields on
+`--chip` with no border (the textarea uses `--r-lg`); placeholders are `--mute`
+and the focus ring stays `--accent`. An invalid field gets a 1px inset `--ink`
+ring. The primary button is a 40px full pill in `--ink` with white text;
+secondary actions ("Close") are `.chip` buttons.
 
 ### Empty and error states
 Centred: a display title (28px/500, `--track-display`), a muted line, and a
@@ -221,6 +245,6 @@ under `prefers-reduced-motion`.
 ## 8. Responsive
 - **≤1100px**: the gutter shrinks to 24px.
 - **<1280px / <960px / <560px**: the browse grids go to 3, 2 and 1 columns.
-- **≤640px**: the gutter is 16px, the search field hides behind its icon, and
-  the toolbar divider is hidden. The top bar must fit at 375px.
+- **≤640px**: the gutter is 16px, the search field hides behind its icon, the
+  site name drops to 36px and dialogs pad 24px. The top bar must fit at 375px.
 - There is never any horizontal page scroll.
