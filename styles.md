@@ -151,11 +151,13 @@ are the facets: "Show me [💳 Pricing ▾] [pages ▾] from [🤖 AI ▾] sites
   render code), a country flag, or a color swatch dot.
 - The view noun (sites / pages / sections) is a chip too.
 - Secondary facets (page type or section where they are not the lead, color,
-  theme, country) wait at the end as dashed `+ color` add-chips at UI size
-  (36px, 15px, `--line-2` dashed border, `--mute`). Once set they join the
+  theme, country) wait on a centred row under the sentence (about 16px of
+  visible space above it, 12px on phones) as `+ color` add-chips at UI size: plain `.chip`s (36px, 15px,
+  `--chip` fill, no border) with a `--mute` label that turns `--ink` on hover;
+  32px and 14.5px at ≤640px. Once set they join the
   sentence ("in [● blue ×]", "in [🌙 dark ×] mode", "from [🇯🇵 Japan ×]") with a
   clear (×) in place of the caret. A search query reads "matching [“pricing” ×]".
-- Under it, one 17px `--mute` line: the count and the source promise ("214
+- Under the sentence and its add-chip row, one 17px `--mute` line: the count and the source promise ("214
   pages · every screenshot links back to its source"), plus an underlined
   "Clear" (`.clear-link`) while any filter or query is set.
 - The sentence is a `role="group"` with an `aria-label`; each chip's accessible

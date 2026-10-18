@@ -223,12 +223,14 @@ a.chip-outline:hover { background: var(--surface); }
 }
 .chip-x:hover { background: var(--surface-2); color: var(--ink); }
 .chip-x svg.i { width: 0.42em; height: 0.42em; }
-.sentence .adds { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 8px; vertical-align: middle; margin-left: 4px; }
+/* Unset secondary facets: a centred row of plain UI-size chips under the sentence;
+   the headline's half-leading adds about 12px to the margin. */
+.sentence .adds { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
 .sentence .chip.add {
   height: 36px; padding: 0 14px; font-size: 15px; font-weight: 400; letter-spacing: var(--track); line-height: 1;
-  background: none; border: 1px dashed var(--line-2); color: var(--mute);
+  color: var(--mute);
 }
-.sentence .chip.add:hover { background: var(--surface); color: var(--ink); }
+.sentence .chip.add:hover { color: var(--ink); }
 /* Menus inside the sentence keep the UI type, centred under their chip. */
 .sentence .menu {
   left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 32px);
@@ -478,7 +480,7 @@ dialog .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   dialog { padding: 24px; }
   .toolbar.is-sentence { padding-top: 36px; }
   .sentence { font-size: 30px; }
-  .sentence .adds { gap: 6px; }
+  .sentence .adds { gap: 6px; margin-top: 6px; }
   .sentence .chip.add { height: 32px; padding: 0 12px; font-size: 14.5px; }
   .sentence-sub { font-size: 15px; }
   .sentence-sub .clear-link { font-size: 15px; }
