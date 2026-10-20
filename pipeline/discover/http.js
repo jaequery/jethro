@@ -2,7 +2,7 @@
 // to the same host, times out after 15s, retries twice with backoff, and checks
 // the host's robots.txt before every crawl request.
 
-export const USER_AGENT = "SqrapBot/1.0 (+https://github.com/jaequery/jethro)";
+export const USER_AGENT = "SqrapBot/1.0 (+https://github.com/jaequery/sqrap)";
 // Our own robots.txt group first, then the legacy one from before the rename.
 const BOTS = ["sqrapbot", "jethrobot"];
 const SPACING_MS = 1000;
