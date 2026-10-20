@@ -13,13 +13,17 @@ export class RobotsDisallowed extends Error {
 
 export class OptedOut extends Error {
   constructor(domain) {
-    super(`${domain} has opted out of Jethro`);
+    super(`${domain} has opted out of Sqrap`);
     this.name = "OptedOut";
     this.code = "optout";
   }
 }
 
-// origin -> Promise<robots parser | null>. In-memory for the process lifetime.
+// Sites that wrote rules for the crawler before the rename keep them.
+const LEGACY_BOT_NAME = "JethroBot";
+const hasGroup = (text, name) => new RegExp(`^\\s*user-agent\\s*:\\s*${name}(/\\S*)?\\s*(#.*)?$`, "im").test(text);
+
+// origin -> Promise<{ robots, agent } | null>. In-memory for the process lifetime.
 const cache = new Map();
 
 function loadRobots(origin) {
@@ -34,7 +38,10 @@ function loadRobots(origin) {
         });
         // 4xx means no rules; 5xx or a network failure is treated the same, leniently.
         if (!res.ok) return null;
-        return robotsParser(robotsUrl, await res.text());
+        const text = await res.text();
+        // The group to read: SqrapBot's own, else a legacy JethroBot one (else `*`).
+        const agent = !hasGroup(text, BOT_NAME) && hasGroup(text, LEGACY_BOT_NAME) ? LEGACY_BOT_NAME : BOT_NAME;
+        return { robots: robotsParser(robotsUrl, text), agent };
       } catch {
         return null;
       }
@@ -48,7 +55,7 @@ export async function assertAllowed(url) {
   const { origin, hostname } = new URL(url);
   const domain = normalizeDomain(hostname);
   if (await isOptedOut(domain)) throw new OptedOut(domain);
-  const robots = await loadRobots(origin);
-  // isAllowed() picks the JethroBot group when present and falls back to `*`.
-  if (robots && robots.isAllowed(url, BOT_NAME) === false) throw new RobotsDisallowed(url);
+  const loaded = await loadRobots(origin);
+  // isAllowed() reads that agent's group when present and falls back to `*`.
+  if (loaded && loaded.robots.isAllowed(url, loaded.agent) === false) throw new RobotsDisallowed(url);
 }

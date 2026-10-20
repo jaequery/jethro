@@ -22,11 +22,11 @@ export const judgeEnabled = () =>
 const toGatewayId = (m) => (m.includes("/") ? m : `anthropic/${m.replace(/-(\d+)-(\d+)$/, "-$1.$2")}`);
 const toAnthropicId = (m) => m.replace(/^anthropic\//, "").replace(/-(\d+)\.(\d+)$/, "-$1-$2");
 export const judgeModel = () => {
-  const m = process.env.JETHRO_JUDGE_MODEL || "claude-sonnet-5-5";
+  const m = (process.env.SQRAP_JUDGE_MODEL ?? process.env.JETHRO_JUDGE_MODEL) || "claude-sonnet-5-5";
   return viaGateway() ? toGatewayId(m) : toAnthropicId(m);
 };
 export const minQuality = () => {
-  const n = Number(process.env.JETHRO_MIN_QUALITY);
+  const n = Number(process.env.SQRAP_MIN_QUALITY ?? process.env.JETHRO_MIN_QUALITY);
   return Number.isFinite(n) && n > 0 ? n : 7;
 };
 

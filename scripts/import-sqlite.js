@@ -14,7 +14,7 @@ import { putShot, shotsDir } from "../lib/shots.js";
 import { head } from "@vercel/blob";
 
 const args = process.argv.slice(2);
-const file = args.find((a) => !a.startsWith("--")) || path.join(dataDir, "jethro.db");
+const file = args.find((a) => !a.startsWith("--")) || path.join(dataDir, "jethro.db"); // the old SQLite file keeps its pre-rename name
 const old = new Database(file, { readonly: true, fileMustExist: true });
 
 // Parents before children, so foreign keys hold.

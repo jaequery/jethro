@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 const notFound = () => new Response("Not found", { status: 404 });
 
-// Streams a captured WebP (lib/shots.js: private Blob, or JETHRO_DATA_DIR/shots
+// Streams a captured WebP (lib/shots.js: private Blob, or SQRAP_DATA_DIR/shots
 // locally). The first segment is the site id, so images of sites that are not
 // public (unjudged, rejected, opted out) are not served either, except to the
 // local admin.

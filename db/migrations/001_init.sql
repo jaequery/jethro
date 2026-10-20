@@ -1,4 +1,4 @@
--- Jethro's initial schema (Postgres). Ids are strings generated in JS
+-- Sqrap's initial schema (Postgres). Ids are strings generated in JS
 -- (crypto.randomUUID()). Timestamps are ISO-8601 text; JSON columns hold JSON text.
 
 CREATE TABLE sites (

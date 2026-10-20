@@ -4,18 +4,18 @@ export const dynamic = "force-dynamic";
 
 const MAX_BATCH = 50;
 const MAX_BYTES = 32 * 1024;
-// The key prefixes lib/jethro.js sends (clickOf); anything else is dropped.
+// The key prefixes lib/sqrap.js sends (clickOf); anything else is dropped.
 const KINDS = /^(site|screen|section|filter|suggest|view|menu|action|lightbox|ui|nav|out):/;
 const LIMIT = 600; // clicks per address per window
 const WINDOW_MS = 10 * 60 * 1000;
-const hits = (globalThis.__jethroClickHits ??= new Map());
+const hits = (globalThis.__sqrapClickHits ??= new Map());
 const LOCAL = /^(127\.|::1$|::ffff:127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fc|fd)/i;
 const VIEWS = new Set(["apps", "screens", "sections", "app"]);
 
 // The caller's address, as in app/api/removal: the socket peer stamped by
 // next.config.mjs, or the last X-Forwarded-For hop when that peer is a local proxy.
 function clientIp(headers) {
-  const peer = headers.get("x-jethro-peer") || "";
+  const peer = headers.get("x-sqrap-peer") || "";
   const hops = (headers.get("x-forwarded-for") || "").split(",").map((h) => h.trim()).filter(Boolean);
   return (!peer || LOCAL.test(peer)) && hops.length ? hops[hops.length - 1] : peer || "unknown";
 }
@@ -49,7 +49,7 @@ function clean(c) {
 
 const fail = (status, message) => Response.json({ error: { message } }, { status, headers: { "Cache-Control": "no-store" } });
 
-// Public: records a batch of clicks sent by lib/jethro.js (navigator.sendBeacon,
+// Public: records a batch of clicks sent by lib/sqrap.js (navigator.sendBeacon,
 // so the body arrives as text/plain JSON). Body: { clicks: [{ target, label, view, siteId }] }.
 export async function POST(request) {
   if (Number(request.headers.get("content-length")) > MAX_BYTES) return fail(413, "Too many clicks in one batch");

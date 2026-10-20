@@ -1,9 +1,10 @@
-// Polite HTTP for discovery: identifies as JethroBot, waits 1s between requests
+// Polite HTTP for discovery: identifies as SqrapBot, waits 1s between requests
 // to the same host, times out after 15s, retries twice with backoff, and checks
 // the host's robots.txt before every crawl request.
 
-export const USER_AGENT = "JethroBot/1.0 (+https://github.com/jaequery/jethro)";
-const BOT = "jethrobot";
+export const USER_AGENT = "SqrapBot/1.0 (+https://github.com/jaequery/jethro)";
+// Our own robots.txt group first, then the legacy one from before the rename.
+const BOTS = ["sqrapbot", "jethrobot"];
 const SPACING_MS = 1000;
 const TIMEOUT_MS = 15000;
 const RETRIES = 2;
@@ -45,7 +46,8 @@ async function rawFetch(url, init = {}) {
 
 /* ---------- robots.txt ---------- */
 
-// Returns the Allow/Disallow rules that apply to JethroBot (its own group, or *).
+// Returns the Allow/Disallow rules that apply to SqrapBot (its own group, else a
+// legacy JethroBot group, else *).
 export function parseRobots(text) {
   const groups = [];
   let current = null;
@@ -67,8 +69,8 @@ export function parseRobots(text) {
       current.rules.push({ allow: key === "allow", path: value });
     }
   }
-  const own = groups.filter((g) => g.agents.some((a) => a !== "*" && BOT.includes(a)));
-  const pick = own.length ? own : groups.filter((g) => g.agents.includes("*"));
+  const own = BOTS.map((bot) => groups.filter((g) => g.agents.some((a) => a !== "*" && bot.includes(a)))).find((g) => g.length);
+  const pick = own ?? groups.filter((g) => g.agents.includes("*"));
   return pick.flatMap((g) => g.rules);
 }
 

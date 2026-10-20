@@ -1,7 +1,7 @@
 import "./styles.css";
 
 export const metadata = {
-  title: "Jethro — design inspiration library",
+  title: "Sqrap — design inspiration library",
   description: "Browse, search and filter real, well-designed websites by page, section, platform and industry.",
 };
 

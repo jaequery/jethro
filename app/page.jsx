@@ -1,15 +1,15 @@
-import Jethro from "./Jethro";
+import Sqrap from "./Sqrap";
 
 export default function Page() {
   return (
     <>
       <header className="topbar" id="topbar">
-        <a className="brand" href="#/apps" aria-label="Jethro home">
+        <a className="brand" href="#/apps" aria-label="Sqrap home">
           <svg viewBox="0 0 46 46" aria-hidden="true">
             <circle cx="23" cy="23" r="20.5" fill="none" stroke="currentColor" strokeWidth="4" />
-            <path d="M25.5 13v0.5M25.5 20v9a5 5 0 0 1 -10 0" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+            <path d="M28.5 16.5c-1.2-1.6-3.2-2.5-5.5-2.5-3.1 0-5.5 1.9-5.5 4.4 0 5.6 11.5 3.5 11.5 9.3 0 2.6-2.6 4.8-6 4.8-2.5 0-4.6-1-5.8-2.8" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="wordmark" aria-hidden="true">Jethro</span>
+          <span className="wordmark" aria-hidden="true">Sqrap</span>
         </a>
         <div className="topbar-end">
           <div className="search-wrap">
@@ -35,8 +35,8 @@ export default function Page() {
       <div className="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot viewer"></div>
 
       <dialog id="about">
-        <h2>About Jethro</h2>
-        <p>Jethro is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme and country.</p>
+        <h2>About Sqrap</h2>
+        <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme and country.</p>
         <p>Every screenshot links to the site it was captured from, and each site's name and logo belong to its owner.</p>
         <p>Own a site listed here? <button className="link" id="removal-open" type="button">Request removal</button></p>
         <form method="dialog"><button className="btn-primary">Got it</button></form>
@@ -44,7 +44,7 @@ export default function Page() {
 
       <dialog id="removal" aria-labelledby="removal-title">
         <h2 id="removal-title">Request removal</h2>
-        <p>Tell us which site is yours. It is hidden from Jethro right away and never captured again.</p>
+        <p>Tell us which site is yours. It is hidden from Sqrap right away and never captured again.</p>
         <form id="removal-form" noValidate>
           <label className="field" data-field="domain">Your site's domain
             <input name="domain" type="text" inputMode="url" autoComplete="url" placeholder="example.com" required maxLength={300} />
@@ -65,7 +65,7 @@ export default function Page() {
         </form>
       </dialog>
 
-      <Jethro />
+      <Sqrap />
     </>
   );
 }

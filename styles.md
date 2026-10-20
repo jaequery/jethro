@@ -1,10 +1,10 @@
-# Jethro style guide
+# Sqrap style guide
 
-Jethro is a quiet, white library UI with lots of space, warm grey chips and
+Sqrap is a quiet, white library UI with lots of space, warm grey chips and
 large, tightly tracked type. A slim top bar carries the brand, search and About,
 and everything else sits in the page below it.
 
-The look is Jethro's own. Do not borrow another product's signature pieces
+The look is Sqrap's own. Do not borrow another product's signature pieces
 (for example an outlined pill drawn around the wordmark).
 
 The tokens below are the source of truth, and `app/styles.css` implements them
@@ -108,8 +108,8 @@ Chevrons and clear buttons are 14px in `--mute`.
 ## 6. Components
 
 ### Top bar (`.topbar`)
-- **Left**: the brand link (`.brand`, to `#/apps`): Jethro's 32px circle-"j"
-  mark (stroked in `currentColor`, `--ink`) next to the **"Jethro" wordmark**
+- **Left**: the brand link (`.brand`, to `#/apps`): Sqrap's 32px circle-"s"
+  mark (stroked in `currentColor`, `--ink`) next to the **"Sqrap" wordmark**
   (`.wordmark`). The wordmark is plain type, with no outline or pill around it.
 - **Right** (`.topbar-end`): the search field, then an "About" text link
   (`.top-link`) that opens the About dialog.
