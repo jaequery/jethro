@@ -90,10 +90,10 @@ export default function Admin() {
   return (
     <div className="layout admin">
       <aside className="sidebar" aria-label="Admin">
-        <a className="logo" href="/" aria-label="Jethro home">
+        <a className="logo" href="/" aria-label="Sqrap home">
           <svg viewBox="0 0 46 46" aria-hidden="true">
             <circle cx="23" cy="23" r="20.5" fill="none" stroke="currentColor" strokeWidth="4" />
-            <path d="M25.5 13v0.5M25.5 20v9a5 5 0 0 1 -10 0" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+            <path d="M28.5 16.5c-1.2-1.6-3.2-2.5-5.5-2.5-3.1 0-5.5 1.9-5.5 4.4 0 5.6 11.5 3.5 11.5 9.3 0 2.6-2.6 4.8-6 4.8-2.5 0-4.6-1-5.8-2.8" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </a>
         <nav className="nav">
@@ -386,7 +386,7 @@ function Removals({ tick, act }) {
 
 const CLICK_RANGES = [["day", "24 hours"], ["week", "7 days"], ["month", "30 days"], ["all", "All time"]];
 
-// What visitors click most on the public library (recorded by lib/jethro.js).
+// What visitors click most on the public library (recorded by lib/sqrap.js).
 function Clicks({ tick }) {
   const [range, setRange] = useState("week");
   const [data, setData] = useState(null);

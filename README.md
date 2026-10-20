@@ -1,4 +1,4 @@
-# Jethro
+# Sqrap
 
 A public design-inspiration library of real, well-designed websites. A local
 pipeline discovers sites, captures them at desktop and mobile widths, and
@@ -7,14 +7,14 @@ screens, search, and filter by platform, page pattern, industry, color, theme an
 sign-in and nothing is saved.
 
 Every captured site is shown with a link to its source domain. The pipeline
-honors robots.txt, never presents a site's logo as Jethro's own, and skips any
+honors robots.txt, never presents a site's logo as Sqrap's own, and skips any
 domain that has opted out. The browse UI reads the database through the route
 handlers below, and shows only `approved` sites whose domain is not in
 `optouts`.
 
 ## Run it
 
-Jethro is a Next.js app (App Router). Node 20.9 or newer.
+Sqrap is a Next.js app (App Router). Node 20.9 or newer.
 
 ```sh
 npm install
@@ -24,6 +24,9 @@ npm run db:migrate           # creates or upgrades the Postgres schema
 npm run dev                  # http://localhost:3000
 npm run build && npm start   # production build
 ```
+
+The project was called Jethro before; every `SQRAP_*` variable still falls back
+to its old `JETHRO_*` name when unset, so existing environments keep working.
 
 ## Discover sites
 
@@ -190,12 +193,12 @@ logged in `events`.
 
 ## Judge and tag
 
-Claude vision decides which captured sites make it into Jethro. Judging sends
+Claude vision decides which captured sites make it into Sqrap. Judging sends
 only the two home-page folds (the desktop and mobile `-lg` thumbnails) with the
 domain and page title, and gets back a 1–10 quality score with per-dimension
 scores and reasons, plus a name, an original tagline and description, an
 industry, a country and a language. A site scoring at least
-`JETHRO_MIN_QUALITY` (default 7) becomes `approved`, anything lower `rejected`.
+`SQRAP_MIN_QUALITY` (default 7) becomes `approved`, anything lower `rejected`.
 A capture that does not show the real site (blank, error page, bot challenge,
 a cookie wall over most of the fold) becomes `failed` with
 `last_error='bad_capture'` so it can be captured again. Approved sites are then
@@ -212,7 +215,7 @@ npm run judge -- --retag <siteId|domain>       # re-run tagging only
 Calls go through Vercel AI Gateway, authenticated by `AI_GATEWAY_API_KEY` or
 the Vercel OIDC token (automatic on Vercel; `vercel env pull` puts a 12-hour
 one in `.env.local`). A set `ANTHROPIC_API_KEY` calls Anthropic directly
-instead. With none of these the CLI exits 1. `JETHRO_JUDGE_MODEL` picks the
+instead. With none of these the CLI exits 1. `SQRAP_JUDGE_MODEL` picks the
 model (default `claude-sonnet-5-5`, sent to the gateway as
 `anthropic/claude-sonnet-5.5`). Token use and an estimated cost
 are printed as it runs and logged in `events`. To re-judge a site, set its
@@ -267,21 +270,21 @@ summary (counts, AI calls, estimated cost, disk added) ends each run.
 With cron (`crontab -e`), 3 am every night:
 
 ```
-0 3 * * * cd /path/to/jethro && npm run pipeline -- --discover --limit 100 >> data/logs/cron.log 2>&1
+0 3 * * * cd /path/to/sqrap && npm run pipeline -- --discover --limit 100 >> data/logs/cron.log 2>&1
 ```
 
 cron and launchd start with a minimal `PATH`; if `npm` is not found, use its
 full path (`which npm`). On macOS, launchd also runs a missed job after the Mac
-wakes. Save as `~/Library/LaunchAgents/com.jethro.pipeline.plist`, then
-`launchctl load ~/Library/LaunchAgents/com.jethro.pipeline.plist`:
+wakes. Save as `~/Library/LaunchAgents/com.sqrap.pipeline.plist`, then
+`launchctl load ~/Library/LaunchAgents/com.sqrap.pipeline.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key><string>com.jethro.pipeline</string>
-  <key>WorkingDirectory</key><string>/path/to/jethro</string>
+  <key>Label</key><string>com.sqrap.pipeline</string>
+  <key>WorkingDirectory</key><string>/path/to/sqrap</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/zsh</string><string>-lc</string>
@@ -289,8 +292,8 @@ wakes. Save as `~/Library/LaunchAgents/com.jethro.pipeline.plist`, then
   </array>
   <key>StartCalendarInterval</key>
   <dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>0</integer></dict>
-  <key>StandardOutPath</key><string>/path/to/jethro/data/logs/cron.log</string>
-  <key>StandardErrorPath</key><string>/path/to/jethro/data/logs/cron.log</string>
+  <key>StandardOutPath</key><string>/path/to/sqrap/data/logs/cron.log</string>
+  <key>StandardErrorPath</key><string>/path/to/sqrap/data/logs/cron.log</string>
 </dict>
 </plist>
 ```
@@ -307,7 +310,7 @@ time and with at most 4 subpages each, through the pipeline with serverless
 Chromium (`@sparticuz/chromium`) and the judge on AI Gateway. It stops claiming
 after 5 minutes so an in-flight site finishes within the 800-second limit. The
 route answers 404 unless called with `Authorization: Bearer $CRON_SECRET`. On
-Vercel `JETHRO_DATA_DIR` is `/tmp/jethro` (logs only); run logs are in the
+Vercel the data dir is under `/tmp` (logs only); run logs are in the
 function logs and `events`. A bad capture counts as a capture attempt, so a
 site whose captures keep failing is retried at most 3 times.
 Change the batch in `app/api/cron/pipeline/route.js` and the schedule in
@@ -317,7 +320,7 @@ Change the batch in `app/api/cron/pipeline/route.js` and the schedule in
 
 `npm run dev` serves the library from Postgres (`DATABASE_URL`) and the shots
 store. Before
-any site is judged, `JETHRO_SHOW_UNJUDGED=1 npm run dev` also shows `captured`
+any site is judged, `SQRAP_SHOW_UNJUDGED=1 npm run dev` also shows `captured`
 sites, so a fresh capture can be browsed without an API key.
 
 | Route | Returns |
@@ -353,7 +356,7 @@ npm run search:reindex
 
 ## Curate locally (admin)
 
-`JETHRO_ADMIN=1 npm run dev`, then open http://localhost:3000/admin. The admin
+`SQRAP_ADMIN=1 npm run dev`, then open http://localhost:3000/admin. The admin
 lists sites by status (Queue: captured, failed and in-flight; Discovered;
 Approved; Rejected) with home thumbnails, score and the judge's reasons. Per
 site you can approve or reject, edit name, tagline, industry and country, retag
@@ -367,10 +370,10 @@ re-captured site keeps its approved or rejected status (its tags fall back to
 the capture engine's guesses until it is re-judged or retagged). A site a
 pipeline run holds (`queued`, `capturing`, `judging`) is refused as busy.
 
-The admin answers 404 unless **both** `JETHRO_ADMIN=1` is set and the request
+The admin answers 404 unless **both** `SQRAP_ADMIN=1` is set and the request
 comes over loopback: the socket address (stamped by `next.config.mjs`, so a
 client-sent `X-Forwarded-For` cannot fake it), the `Host` header and any
-`Origin` must be `localhost`, `127.0.0.1` or `::1`. Never set `JETHRO_ADMIN` on
+`Origin` must be `localhost`, `127.0.0.1` or `::1`. Never set `SQRAP_ADMIN` on
 a hosted deployment; the guard is the only protection, there are no accounts.
 
 | Route | Does |
@@ -397,7 +400,7 @@ the library and the pipeline. A new request for a dismissed domain reopens it.
 
 - `app/layout.jsx`: the document, metadata and font
 - `app/page.jsx`: the page shell
-- `app/Jethro.jsx`: client component that mounts the renderer
+- `app/Sqrap.jsx`: client component that mounts the renderer
 - `app/styles.css`: design tokens and components
 - `styles.md`: the style guide those tokens come from
 - `lib/db.js`: the Postgres pool and query helpers (server only)
@@ -413,7 +416,7 @@ the library and the pipeline. A new request for a dismissed domain reopens it.
 - `pipeline/discover/`: discovery adapters (`galleries/`, `search.js`, `seeds.js`), URL normalization and polite fetching
 - `scripts/discover.js`, `scripts/seed.js`: the discovery CLIs
 - `seeds.example.txt`: a starter list of well-designed sites
-- `data/`: local pipeline logs, and captures when there is no Blob token (git-ignored; `JETHRO_DATA_DIR` moves it)
+- `data/`: local pipeline logs, and captures when there is no Blob token (git-ignored; `SQRAP_DATA_DIR` moves it)
 - `scripts/import-sqlite.js`: one-off copy of an old SQLite library and its `data/shots` into Postgres and Blob
 - `pipeline/*.js`: the capture engine (browser, page prep, robots/opt-out checks, sections, subpage links); `scripts/capture.js` is its CLI
 - `pipeline/judge/`: the Claude vision judge and tagger (rubric, image prep, output schema); `scripts/judge.js` is its CLI
@@ -421,7 +424,7 @@ the library and the pipeline. A new request for a dismissed domain reopens it.
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
-- `lib/jethro.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
+- `lib/sqrap.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
 
 ## URLs
 

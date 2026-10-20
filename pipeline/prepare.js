@@ -99,15 +99,15 @@ async function clickConsent(page) {
       }
       for (const sel of selectors) {
         const el = roots.flatMap((r) => [...r.querySelectorAll(sel)]).find(visible);
-        if (el) { el.setAttribute("data-jethro-consent", ""); return true; }
+        if (el) { el.setAttribute("data-sqrap-consent", ""); return true; }
       }
       return false;
     }, CONSENT_BUTTONS).catch(() => false);
     if (marked) {
       // CSS locators pierce open shadow roots.
-      const target = frame.locator("[data-jethro-consent]").first();
+      const target = frame.locator("[data-sqrap-consent]").first();
       await realClick(page, target);
-      await target.evaluate((el) => el.removeAttribute("data-jethro-consent")).catch(() => {});
+      await target.evaluate((el) => el.removeAttribute("data-sqrap-consent")).catch(() => {});
       return true;
     }
 
