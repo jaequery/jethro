@@ -396,6 +396,38 @@ domain is in the library. In the admin, **Approve removal** deletes the site's
 rows and images and keeps blocking the domain; **Dismiss** lets it back into
 the library and the pipeline. A new request for a dismissed domain reopens it.
 
+## Accounts
+
+Visitors can sign up and sign in with an email and password, or with Google;
+browsing never requires an account. It is hand-rolled, with no auth library:
+
+- Passwords are hashed with scrypt (`node:crypto`). Sessions are random 32-byte
+  tokens in an httpOnly, SameSite=Lax cookie (`sqrap_session`, `Secure` over
+  HTTPS and in production, 30 days); Postgres stores only the SHA-256 of the token.
+- Tables `users`, `auth_identities` and `sessions` come from migration `005`.
+  Run `npm run db:migrate` after pulling.
+- Sign-in, sign-up and the Google start are rate-limited per client address
+  (the `x-sqrap-peer` stamp, as for removal requests) and sign-in also per email.
+  The limiter is in memory, so it is per server instance. Sign-in errors never say
+  whether an email exists; sign-up does say "already exists".
+- Google sign-in needs `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Create an
+  OAuth client (type Web application) in Google Cloud Console with the authorized
+  redirect URI `<your origin>/api/auth/google/callback` (add
+  `http://localhost:3000/api/auth/google/callback` for local dev) and set both in
+  Vercel. Without them the Google button is hidden and `/api/auth/google/start`
+  answers 404. Behind a proxy that rewrites the host, set `SQRAP_PUBLIC_URL`
+  (e.g. `https://sqrap.example`) so the redirect URI matches.
+- A Google sign-in whose email Google reports as verified signs into the account
+  with that email. If that account had a password (which was never verified by
+  email), the password and its sessions are dropped, so whoever pre-registered the
+  address cannot keep access; the owner signs in with Google.
+- Routes: `app/api/auth/{signup,login,logout,me}` and `google/{start,callback}`;
+  `lib/auth.js` holds the server logic; the dialog lives in `app/page.jsx` and
+  `lib/sqrap.js` (`#/signin`, `#/signup`).
+
+Not built yet: email verification, password reset, and anything that uses the
+account (saved collections).
+
 ## Files
 
 - `app/layout.jsx`: the document, metadata and font
@@ -423,6 +455,7 @@ the library and the pipeline. A new request for a dismissed domain reopens it.
 - `pipeline/run.js`: the orchestrator (claims, resume, AI budget, logging); `scripts/pipeline.js` and `scripts/pipeline-status.js` are its CLIs
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
+- `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
 - `lib/sqrap.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
 

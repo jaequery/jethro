@@ -24,6 +24,7 @@ export default function Page() {
             <div className="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></div>
           </div>
           <button className="top-link" id="about-btn" type="button">About</button>
+          <div className="account" id="account"></div>
         </div>
       </header>
 
@@ -63,6 +64,27 @@ export default function Page() {
             <button className="chip" type="button" id="removal-close">Close</button>
           </div>
         </form>
+      </dialog>
+
+      <dialog id="auth" aria-labelledby="auth-title">
+        <h2 id="auth-title">Sign in</h2>
+        <a className="chip chip-outline google-btn" id="auth-google" href="/api/auth/google/start" hidden>Continue with Google</a>
+        <form id="auth-form" noValidate>
+          <label className="field" data-field="email">Email
+            <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required maxLength={254} />
+            <small className="err" hidden></small>
+          </label>
+          <label className="field" data-field="password">Password
+            <input name="password" type="password" autoComplete="current-password" required maxLength={200} />
+            <small className="err" hidden></small>
+          </label>
+          <p className="form-status" id="auth-status" role="status"></p>
+          <div className="row">
+            <button className="btn-primary" type="submit" id="auth-submit">Sign in</button>
+            <button className="chip" type="button" id="auth-close">Close</button>
+          </div>
+        </form>
+        <p className="auth-switch"><span id="auth-switch-text"></span> <a className="link" id="auth-switch" href="#/signup">Sign up</a></p>
       </dialog>
 
       <Sqrap />
