@@ -3,8 +3,8 @@ import { fail, googleEnabled, ok, publicUser, sessionUser } from "../../../../li
 export const dynamic = "force-dynamic";
 
 // The signed-in user (or null) and whether Google sign-in is configured. The
-// header calls this on every page load, so a database failure degrades to
-// signed out instead of breaking browsing.
+// header calls this on every page load; a database failure answers 503 and the
+// client stays signed out instead of breaking browsing.
 export async function GET(request) {
   let user = null;
   try {
