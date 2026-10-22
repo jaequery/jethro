@@ -1,6 +1,8 @@
 import { snapshotAgentUsage } from "../../../../lib/agent-quota";
 import { queueCounts } from "../../../../lib/db";
+import { embeddingsEnabled } from "../../../../lib/embeddings";
 import { retryPendingPurges } from "../../../../lib/shots";
+import { embedNew } from "../../../../pipeline/embed";
 import { runPipeline } from "../../../../pipeline/run";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,8 @@ export const dynamic = "force-dynamic";
 // finish before the hard limit. A site cut off anyway is reset by a later run.
 export const maxDuration = 800;
 const STOP_CLAIMING_MS = 300 * 1000;
+const EMBED_LIMIT = 64;
+const EMBED_MS = 60 * 1000;
 
 // Each run: pull a few new sites from the galleries (time-boxed, so a slow
 // gallery cannot eat the run), then take a few sites through capture → judge →
@@ -32,7 +36,12 @@ export async function GET(request) {
   const purges = await retryPendingPurges({ limit: 64, ms: 15 * 1000 }).catch((err) => ({ error: err.message }));
   // Agent API usage (Redis) into agent_usage_weekly: the running and the previous week.
   const agentUsage = await snapshotAgentUsage().catch((err) => ({ error: err.message }));
+  // Image embeddings for find_similar, for sites approved by earlier runs:
+  // a small batch, time-boxed so the pipeline below keeps its share of the run.
+  const embeddings = embeddingsEnabled()
+    ? await embedNew({ limit: EMBED_LIMIT, signal: AbortSignal.timeout(EMBED_MS), log: console.error }).catch((err) => ({ error: err.message }))
+    : { skipped: "no AI Gateway credentials" };
   const queued = (await queueCounts()).capture;
   const totals = await runPipeline(RUN, { signal: AbortSignal.timeout(STOP_CLAIMING_MS) });
-  return Response.json({ data: { queued, ...totals, purges, agentUsage } }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ data: { queued, ...totals, purges, agentUsage, embeddings } }, { headers: { "Cache-Control": "no-store" } });
 }

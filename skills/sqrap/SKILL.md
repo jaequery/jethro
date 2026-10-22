@@ -25,7 +25,7 @@ public marketing websites.
 ## How
 
 **With the MCP server** (tools named `search_screens`, `search_sections`,
-`get_site`, `list_filters`):
+`get_site`, `find_similar`, `list_filters`):
 
 1. `list_filters` once if you are unsure of a filter value (page patterns,
    section types, industries, colors, themes, countries).
@@ -34,6 +34,9 @@ public marketing websites.
    Add `"include_images": true` to see up to four results inline (512px wide).
 3. `get_site` with a domain from the results (`{ "site": "stripe.com", "platform": "desktop" }`)
    for its other pages and each page's section order.
+4. `find_similar` with a result's `id` for more designs that look like it
+   (`{ "id": "<section id>", "limit": 6 }`), or with a screenshot as base64
+   `image` (at most 2 MB, counts as 5 calls; it is not stored).
 
 Pick two or three references, say what you take from each (layout, hierarchy,
 palette, section order), then design something of your own. Do not copy a
@@ -47,6 +50,7 @@ curl -H "Authorization: Bearer $SQRAP_API_KEY" \
 curl -H "Authorization: Bearer $SQRAP_API_KEY" \
   "https://sqrap.com/api/v1/sections?type=Hero&limit=5"
 curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/sites/stripe.com"
+curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/similar?id=<section id>&limit=5"
 ```
 
 The spec is at https://sqrap.com/api/v1/openapi.json. Setup for Claude Code,

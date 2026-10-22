@@ -474,6 +474,8 @@ needed; `lib/openapi.js`, keep it in step with the routes). The MCP server wraps
 | `GET /api/v1/screens` | Page screenshots |
 | `GET /api/v1/sections` | Page sections (`section` or `type` picks the type) |
 | `GET /api/v1/filters` | Every filter value with its count |
+| `GET /api/v1/similar?id=…` | Sections or screens of other sites that look like a section or screen (see Similarity search) |
+| `POST /api/v1/similar` | The same for an uploaded screenshot (body `image/*` or multipart field `image`, at most 2 MB; counts as 5 calls) |
 
 Lists take `q`, `platform`, `pattern`, `section`, `industry`, `color`, `theme`,
 `country`, `limit` (1 to 100) and `cursor` (the previous page's `next`); a filter
@@ -528,6 +530,38 @@ If *Request Path* starts with `/api/v1/` or equals `/mcp`, then *Rate Limit*, fi
 60 seconds, 120 requests, keyed on *IP*, action *Too Many Requests (429)*. The
 owner turns it on in the dashboard; nothing in the code depends on it.
 
+## Similarity search
+
+`find_similar` (REST `/api/v1/similar`, MCP tool `find_similar`) searches image
+embeddings: one 512-dim vector per section and per home-page screen of a public
+site, from its top agent tile, made by `cohere/embed-v4.0` through Vercel AI
+Gateway (`lib/embeddings.js`; `AI_GATEWAY_API_KEY` or the Vercel OIDC token,
+like the judge). They live in `embeddings` (migration `009`, pgvector with an
+HNSW cosine index; Neon has the extension). Results are public sections or
+screens, most similar first, with `similarity` (cosine); a query by `id` leaves
+out that item's own site, and `kind`, `type`, `platform` and `limit` (at most
+48) narrow it. An uploaded screenshot is scaled like an agent tile, embedded in
+memory and never stored, and counts as 5 calls against the key's quota.
+
+Every cron run embeds up to 64 new items (sections first, newest approvals
+first, time-boxed to a minute) before the pipeline (`pipeline/embed.js`). A
+failed image keeps a row with its error and is retried up to 3 times. Sites
+already in the library are backfilled with `npm run embed:backfill`: without
+`--yes` it embeds 50 pending sections without storing them and prints the
+estimated cost of everything pending; with `--yes` it embeds it all, and can be
+stopped and run again. When a site leaves public view, `purgeSiteShots` deletes
+its embeddings. `AI_GATEWAY_BASE_URL` points the client at another
+OpenAI-compatible `/embeddings` endpoint, such as a local stub.
+
+```sh
+npm run db:migrate                    # 009: pgvector and the embeddings table
+npm run embed:backfill                # dry run: 50 sections, estimated total cost
+npm run embed:backfill -- --yes       # everything pending (--batch 32 --limit N)
+curl -H "Authorization: Bearer $SQRAP_KEY" "https://sqrap.com/api/v1/similar?id=<section id>&limit=5"
+curl -H "Authorization: Bearer $SQRAP_KEY" -H "Content-Type: image/png" --data-binary @shot.png \
+  "https://sqrap.com/api/v1/similar?kind=sections"
+```
+
 ## MCP server
 
 `/mcp` (`app/mcp/route.js`, tools in `lib/agent-mcp.js`) is a remote MCP server
@@ -541,6 +575,7 @@ before any MCP handling) and calls the same reads directly, not over HTTP.
 | `search_screens` | Whole pages by `q` and the taxonomy filters (`platform`, `pattern`, `section`, `industry`, `color`, `theme`, `country`) |
 | `search_sections` | Single sections by `type`, `q` and the same filters |
 | `get_site` | One site by id or domain: its pages with theme, palette and image URLs, and each page's sections in order |
+| `find_similar` | Sections or screens that look like a result (`id`) or a base64 screenshot (`image`, at most 2 MB, counts as 5 calls) |
 | `list_filters` | Every filter value with its count |
 
 Each tool call is charged to the key's daily quota and, when it succeeds,
@@ -596,6 +631,7 @@ after verifying the sqrap.com domain.
 - `app/terms/page.jsx`: the terms for agents and API use
 - `app/mcp/route.js`, `lib/agent-mcp.js`, `app/agents/`, `skills/sqrap/`, `app/llms.txt/route.js`, `server.json`: the MCP server, its setup page, the Claude Code skill, llms.txt and the MCP Registry entry (see MCP server)
 - `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts) and API keys
+- `lib/embeddings.js`, `pipeline/embed.js`, `scripts/backfill-embeddings.js`: image embeddings and find_similar (see Similarity search)
 - `app/api/v1/**`, `lib/agent-api.js`, `lib/agent-quota.js`, `lib/openapi.js`, `app/api/account/keys/**`: the agent API, its quota and usage counters, its OpenAPI spec and key management (see Agent API)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
 - `lib/sqrap.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
