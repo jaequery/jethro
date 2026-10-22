@@ -296,7 +296,7 @@ div.card { position: relative; cursor: default; }
 /* Empty marker below the grid; holds the retry chip when a batch fails. */
 .sentinel { display: flex; justify-content: center; margin: 36px 0 80px; min-height: 1px; }
 
-/* ---------- Document pages (/terms) ---------- */
+/* ---------- Document pages (/terms, /agents) ---------- */
 .doc { max-width: 680px; margin: 40px auto 0; color: var(--ink-2); font-size: 17px; line-height: 1.6; }
 .doc h1 { margin: 0; color: var(--ink); font-size: 48px; font-weight: 500; letter-spacing: var(--track-display); line-height: 1.1; }
 .doc h2 { margin: 40px 0 10px; color: var(--ink); font-size: 24px; font-weight: 500; letter-spacing: var(--track-display); line-height: 1.2; }
@@ -305,6 +305,14 @@ div.card { position: relative; cursor: default; }
 .doc b { font-weight: 500; color: var(--ink); }
 .doc a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
 .doc code { font-size: 15px; background: var(--chip); border-radius: var(--r-sm); padding: 1px 6px; }
+.doc h3 { margin: 24px 0 8px; color: var(--ink); font-size: 17px; font-weight: 500; letter-spacing: var(--track-tight); }
+/* A copyable snippet (/agents): a muted label and the Copy chip over monospace on --chip. */
+.code-block { margin: 0 0 16px; min-width: 0; }
+.code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; color: var(--mute); font-size: 14.5px; }
+.code-head .chip { height: 30px; padding: 0 12px; font-size: 14px; cursor: pointer; }
+.code-head .chip:hover { background: var(--surface); }
+.code-block pre { margin: 0; padding: 16px 18px; border-radius: var(--r-lg); background: var(--chip); color: var(--ink); overflow-x: auto; }
+.doc .code-block code { padding: 0; background: none; border-radius: 0; font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
 @media (max-width: 640px) {
   .doc h1 { font-size: 36px; }
 }
