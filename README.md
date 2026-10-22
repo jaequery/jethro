@@ -3,7 +3,7 @@
 A public design-inspiration library of real, well-designed websites. A local
 pipeline discovers sites, captures them at desktop and mobile widths, and
 publishes the ones that pass a quality gate. Visitors browse sites and their
-screens, search, and filter by platform, page pattern, industry, color, theme and country. There is no
+screens, search, and filter by platform, page pattern, industry, color, theme, style and country. There is no
 sign-in and nothing is saved.
 
 Every captured site is shown with a link to its source domain. The pipeline
@@ -205,15 +205,35 @@ industry, a country and a language. A site scoring at least
 A capture that does not show the real site (blank, error page, bot challenge,
 a cookie wall over most of the fold) becomes `failed` with
 `last_error='bad_capture'` so it can be captured again. Approved sites are then
-tagged: each page gets a page pattern and every section crop a section type,
-from `lib/taxonomy.js`.
+styled and tagged: the site gets 1 or 2 visual styles (minimal, editorial,
+brutalist, …: `STYLES`), each page a page pattern and every section crop a
+section type, all from `lib/taxonomy.js`.
+
+Styles come from a call of their own (`styleSite`, `STYLE_SCHEMA`) that sees the
+same two home folds and writes only `sites.style`, `styled_at` and
+`style_attempts` (migration `010`), never status, quality, name or description,
+so styling an approved site can never reject it. The pipeline styles a site
+right after approving it. Sites without a style (approved before styles
+existed, or whose style call failed) get one from `npm run judge -- --style-only`
+or from the cron route, which styles up to 8 per run; a site whose answer is
+outside `STYLES` 3 times is left alone.
 
 ```sh
 npm run judge -- stripe.com                    # judge one site (id or domain), tag it if approved
 npm run judge -- --dry-run stripe.com          # print the judgement as JSON, write nothing
 npm run judge -- --all-captured --limit 15     # every site with status 'captured'
 npm run judge -- --retag <siteId|domain>       # re-run tagging only
+npm run judge -- --style-only                  # style every public site without a style (--limit N)
+npm run judge -- --style-only stripe.com --dry-run  # print a site's styles, write nothing
+npm run style:calibrate                        # agreement with the hand-labelled sites
 ```
+
+`pipeline/judge/style-calibration.json` holds 30 hand-labelled sites (1 or 2
+styles each). `npm run style:calibrate` runs the style call on those in the
+library without writing anything and prints, per site and overall, how often
+the model's first style is one of the labels, how often they share any style,
+how often the sets are the same, and precision and recall per style
+(`-- --json <file>` saves it). Sites not in the library are listed as skipped.
 
 Calls go through Vercel AI Gateway, authenticated by `AI_GATEWAY_API_KEY` or
 the Vercel OIDC token (automatic on Vercel; `vercel env pull` puts a 12-hour
@@ -247,7 +267,7 @@ npm run pipeline:status                       # sites per status and the last 10
 | `--discover-limit` | 200 | new sites discovery adds |
 | `--limit` | 25 | sites advanced this run |
 | `--concurrency` | 3 | sites in parallel |
-| `--max-judge` | 100 | AI calls (judge + tag) this run |
+| `--max-judge` | 100 | AI calls (judge, style and tag) this run |
 | `--recapture-older-than` | off | re-queue approved sites captured longer ago, e.g. `90d` |
 | `--retry-failed` | off | re-queue failed sites with fewer than 3 attempts |
 | `--prune-rejected` | off | delete a rejected site's screenshots |
@@ -255,8 +275,8 @@ npm run pipeline:status                       # sites per status and the last 10
 | `--dry-run` | off | print the queue and exit |
 
 Each run works on unfinished approved sites first, then captured sites waiting
-for the judge, then discovered sites. Judging a site reserves two AI calls
-(judge and tag); once `--max-judge` is used up, newly captured sites stay
+for the judge, then discovered sites. Judging a site reserves three AI calls
+(judge, style and tag); once `--max-judge` is used up, newly captured sites stay
 `captured` for the next run. Without AI credentials the pipeline only
 captures. Approved sites stay hidden (`capturing`) until their subpages and
 tags are in. It stops claiming when less than 2 GB is free, and restarts the
@@ -307,7 +327,8 @@ that suit your machine and AI budget.
 ### On Vercel Cron
 
 Production also runs the pipeline itself: `vercel.json` calls
-`/api/cron/pipeline` every 30 minutes. Each run first pulls up to 15 new sites
+`/api/cron/pipeline` every 30 minutes. Each run styles up to 8 public sites
+that have no style yet (for at most a minute), then pulls up to 15 new sites
 from the galleries (for at most 90 seconds), then takes up to 6 sites, one at a
 time and with at most 4 subpages each, through the pipeline with serverless
 Chromium (`@sparticuz/chromium`) and the judge on AI Gateway. It stops claiming
@@ -328,8 +349,8 @@ sites, so a fresh capture can be browsed without an API key.
 
 | Route | Returns |
 | --- | --- |
-| `GET /api/library/meta` | the taxonomy with public counts per platform, pattern, section type, industry, color and theme, plus the countries that have public sites (with their region) |
-| `GET /api/sites?q&platform&pattern&section&industry&color&theme&country&cursor&limit=24` | sites with a desktop and a mobile cover screen |
+| `GET /api/library/meta` | the taxonomy with public counts per platform, pattern, section type, industry, color, theme and style, plus the countries that have public sites (with their region) |
+| `GET /api/sites?q&platform&pattern&section&industry&color&theme&style&country&cursor&limit=24` | sites with a desktop and a mobile cover screen |
 | `GET /api/sites/<id>` | one site with its pages, screens and sections (404 unless public) |
 | `GET /api/screens?…same filters…&cursor&limit=36` | page screenshots |
 | `GET /api/sections?type&…same filters…&cursor&limit=36` | section crops |
@@ -349,7 +370,8 @@ than there are pages. A screen's `color` (red, orange, yellow, green, teal,
 blue, purple, pink, brown, black, white or gray) and `theme` (light or dark)
 come from its dominant color and palette (`lib/color.js`); capture sets them,
 and `npm run color:backfill` fills screens captured before they existed.
-`country` is an ISO 3166-1 alpha-2 code from the judge.
+`country` is an ISO 3166-1 alpha-2 code from the judge, and `style` one of the
+site's styles (see Judge and tag).
 
 Sites captured before agent images existed get them from their stored images
 with `npm run agent:backfill` (public sites only; re-run it after approving
@@ -474,16 +496,17 @@ needed; `lib/openapi.js`, keep it in step with the routes). The MCP server wraps
 | `GET /api/v1/screens` | Page screenshots |
 | `GET /api/v1/sections` | Page sections (`section` or `type` picks the type) |
 | `GET /api/v1/filters` | Every filter value with its count |
+| `GET /api/v1/brief` | A design brief: 5 to 8 references for a page (see Design brief) |
 | `GET /api/v1/similar?id=…` | Sections or screens of other sites that look like a section or screen (see Similarity search) |
 | `POST /api/v1/similar` | The same for an uploaded screenshot (body `image/*` or multipart field `image`, at most 2 MB; counts as 5 calls) |
 
 Lists take `q`, `platform`, `pattern`, `section`, `industry`, `color`, `theme`,
-`country`, `limit` (1 to 100) and `cursor` (the previous page's `next`); a filter
+`style`, `country`, `limit` (1 to 100) and `cursor` (the previous page's `next`); a filter
 value outside `lib/taxonomy.js` answers 400. Only public sites (the same rule
 as the browser API, so never rejected or opted-out ones) come back. Every record
 carries the source `domain` and `sourceUrl`; screens add `palette`, `dominant`,
 `theme` and `color`; sections add their `position` on the page; sites add
-`homePageJudge`, the judge's six scores and up to three reasons, which judge only
+`style` and `homePageJudge`, the judge's six scores and up to three reasons, which judge only
 the home page's first screens. `topOfPageOnly: true` marks images that show only
 the top of the page. Images are only the agent tiles and the small `sm`
 thumbnails, never the full-page or large shots. Successful reads send
@@ -562,6 +585,28 @@ curl -H "Authorization: Bearer $SQRAP_KEY" -H "Content-Type: image/png" --data-b
   "https://sqrap.com/api/v1/similar?kind=sections"
 ```
 
+## Design brief
+
+`design_brief` (MCP tool, REST `GET /api/v1/brief`, `agentBrief` in
+`lib/agent-api.js`) gathers references for a page an agent is about to build.
+The goal is any of `pattern`, `industry`, `theme`, `style` and `platform`, plus
+an optional `reference` (a site domain, or a site, section or screen id) and
+`limit` (5 to 8, default 6). It returns public sites with a screen matching the
+filters, most similar to the reference's home page first (image embeddings, see
+Similarity search) or else the judge's best first. When fewer than 5 match,
+filters are dropped (style, then theme, industry, pattern) and the list is
+topped up; `relaxed` says which, on the brief and on each added reference.
+Each reference has its source `domain` and `sourceUrl`, the page that stands
+for it (a screen matching the filters, desktop and the home page first) with that page's
+palette, theme, color, section order and agent image, the site's styles and the
+judge's home-page scores; `summary` counts themes and styles and lists the
+section types at least half the pages share, in their usual order. The brief
+says it is aggregated facts, not a critique. It costs one call.
+
+```sh
+curl -H "Authorization: Bearer $SQRAP_KEY" "https://sqrap.com/api/v1/brief?pattern=Pricing&theme=dark&style=minimal&reference=linear.app"
+```
+
 ## MCP server
 
 `/mcp` (`app/mcp/route.js`, tools in `lib/agent-mcp.js`) is a remote MCP server
@@ -572,10 +617,11 @@ before any MCP handling) and calls the same reads directly, not over HTTP.
 
 | Tool | Does |
 | --- | --- |
-| `search_screens` | Whole pages by `q` and the taxonomy filters (`platform`, `pattern`, `section`, `industry`, `color`, `theme`, `country`) |
+| `search_screens` | Whole pages by `q` and the taxonomy filters (`platform`, `pattern`, `section`, `industry`, `color`, `theme`, `style`, `country`) |
 | `search_sections` | Single sections by `type`, `q` and the same filters |
 | `get_site` | One site by id or domain: its pages with theme, palette and image URLs, and each page's sections in order |
 | `find_similar` | Sections or screens that look like a result (`id`) or a base64 screenshot (`image`, at most 2 MB, counts as 5 calls) |
+| `design_brief` | 5 to 8 references for a page: the goal's filters, ranked by similarity to a `reference` or by the judge (see Design brief) |
 | `list_filters` | Every filter value with its count |
 
 Each tool call is charged to the key's daily quota and, when it succeeds,
@@ -612,7 +658,7 @@ after verifying the sqrap.com domain.
 - `lib/queries.js`: the public browse queries (filters, keyset pagination, public-site rule) behind the API (server only)
 - `lib/api.js`: request parsing and JSON responses shared by the route handlers
 - `app/api/**/route.js`, `app/shots/[...path]/route.js`: the browse API and the image server
-- `lib/taxonomy.js`: platforms, page patterns, section types, industries, color buckets, themes and site statuses
+- `lib/taxonomy.js`: platforms, page patterns, section types, industries, color buckets, themes, styles and site statuses
 - `lib/search.js`: the full-text index (reindexing and safe tsquery building); `scripts/search-reindex.js` is its CLI
 - `lib/color.js`: color bucket and theme rules; `scripts/color-backfill.js` applies them to stored screens
 - `lib/regions.js`: country codes grouped by region for the Country filter
@@ -624,7 +670,7 @@ after verifying the sqrap.com domain.
 - `pipeline/agent-images.js`, `scripts/backfill-agent.js`: agent-sized image tiles, written by capture and backfilled for older captures
 - `scripts/import-sqlite.js`: one-off copy of an old SQLite library and its `data/shots` into Postgres and Blob
 - `pipeline/*.js`: the capture engine (browser, page prep, robots/opt-out checks, sections, subpage links); `scripts/capture.js` is its CLI
-- `pipeline/judge/`: the Claude vision judge and tagger (rubric, image prep, output schema); `scripts/judge.js` is its CLI
+- `pipeline/judge/`: the Claude vision judge, tagger and styler (rubric, image prep, output schema, style calibration set); `scripts/judge.js` and `scripts/style-calibration.js` are its CLIs
 - `pipeline/run.js`: the orchestrator (claims, resume, AI budget, logging); `scripts/pipeline.js` and `scripts/pipeline-status.js` are its CLIs
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
@@ -641,6 +687,6 @@ after verifying the sqrap.com domain.
 State lives in the hash, so every view can be shared:
 `#/apps` (sites), `#/screens`, `#/sections`, `#/app/<id>` (one site), `#/keys`
 (the API keys dialog, after signing in), plus
-`?q=&platform=&pattern=&section=&industry=&color=&theme=&country=`. `platform`
-is `desktop` or `mobile`, `color` a color bucket, `theme` `light` or `dark` and
-`country` a two-letter code such as `JP`.
+`?q=&platform=&pattern=&section=&industry=&color=&theme=&style=&country=`. `platform`
+is `desktop` or `mobile`, `color` a color bucket, `theme` `light` or `dark`,
+`style` a style id such as `minimal` and `country` a two-letter code such as `JP`.

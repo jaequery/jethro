@@ -63,7 +63,7 @@ export default function Agents() {
           <CodeBlock label=".vscode/mcp.json">{VSCODE}</CodeBlock>
 
           <h2>3. Ask for references</h2>
-          <p>The server has five tools: <b>search_screens</b> (whole pages, filtered by page pattern, industry, color, theme and more), <b>search_sections</b> (single sections by type), <b>get_site</b> (one site's pages, each with its sections in order), <b>find_similar</b> (more designs that look like a result, or like a screenshot you send) and <b>list_filters</b> (every filter value). Results carry image URLs; set <code>include_images</code> to get up to four small images inline. Try “Find three dark pricing pages on Sqrap and build ours in that spirit”.</p>
+          <p>The server has six tools: <b>design_brief</b> (five to eight references for the page you are building, with their palettes, section order and the judge's scores), <b>search_screens</b> (whole pages, filtered by page pattern, industry, color, theme, style such as minimal or editorial, and more), <b>search_sections</b> (single sections by type), <b>get_site</b> (one site's pages, each with its sections in order), <b>find_similar</b> (more designs that look like a result, or like a screenshot you send) and <b>list_filters</b> (every filter value). Results carry image URLs; set <code>include_images</code> to get up to four small images inline. Try “Find three dark pricing pages on Sqrap and build ours in that spirit”.</p>
           <p>For Claude Code there is also a <a href="https://github.com/jaequery/sqrap/blob/main/skills/sqrap/SKILL.md">Sqrap skill</a> that tells the agent when to reach for Sqrap. Install it for all your projects with:</p>
           <CodeBlock label="Terminal">{SKILL}</CodeBlock>
 

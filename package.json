@@ -11,6 +11,7 @@
     "seed": "node scripts/seed.js",
     "capture": "node scripts/capture.js",
     "judge": "node scripts/judge.js",
+    "style:calibrate": "node scripts/style-calibration.js",
     "pipeline": "node scripts/pipeline.js",
     "pipeline:status": "node scripts/pipeline-status.js",
     "search:reindex": "node scripts/search-reindex.js",
