@@ -1,15 +1,18 @@
-// The AI judge and tagger. judgeSite looks at a captured site's two home-page
-// folds and moves it to approved, rejected or failed (bad_capture); tagSite
-// gives every page of an approved site a page pattern and every section crop a
-// section type. Both write through lib/db.js and log token usage as events.
+// The AI judge, tagger and styler. judgeSite looks at a captured site's two
+// home-page folds and moves it to approved, rejected or failed (bad_capture);
+// tagSite gives every page of an approved site a page pattern and every section
+// crop a section type; styleSite gives the site 1 or 2 visual styles from the
+// same two folds and writes nothing else. All write through lib/db.js and log
+// token usage as events.
 import Anthropic from "@anthropic-ai/sdk";
 import { getVercelOidcToken } from "@vercel/oidc";
 import { all, get, getSite, getSiteByDomain, recordEvent, run, tx, upsertSite } from "../../lib/db.js";
+import { publicSites } from "../../lib/queries.js";
 import { reindexSite } from "../../lib/search.js";
 import { purgeSiteShots } from "../../lib/shots.js";
 import { imageBlock } from "./images.js";
-import { JUDGE_SYSTEM, TAG_SYSTEM, judgeUserText } from "./prompt.js";
-import { JUDGE_SCHEMA, SchemaError, TAG_SCHEMA, validateJudgement, validateTags } from "./schema.js";
+import { JUDGE_SYSTEM, STYLE_SYSTEM, TAG_SYSTEM, judgeUserText } from "./prompt.js";
+import { JUDGE_SCHEMA, SchemaError, STYLE_SCHEMA, TAG_SCHEMA, validateJudgement, validateStyle, validateTags } from "./schema.js";
 
 // Calls go to Anthropic directly when ANTHROPIC_API_KEY is set; otherwise
 // through Vercel AI Gateway (the Anthropic SDK pointed at it), authenticated by
@@ -128,6 +131,16 @@ async function homeScreens(siteId) {
   return { page, screens: Object.fromEntries(rows.map((r) => [r.platform, r])) };
 }
 
+// The image blocks of a site's home folds, desktop first, each after a label.
+async function foldBlocks(screens) {
+  const content = [];
+  for (const platform of ["desktop", "mobile"]) {
+    if (!screens[platform]) continue;
+    content.push({ type: "text", text: `${platform === "desktop" ? "Desktop" : "Mobile"} fold:` }, await imageBlock(screens[platform].lg_path));
+  }
+  return content;
+}
+
 /* ---------- Judging ---------- */
 
 // Judges a captured site from its desktop and mobile home folds. With
@@ -153,11 +166,7 @@ export async function judgeSite(siteOrId, { dryRun = false } = {}) {
 
   let judgement;
   try {
-    const content = [];
-    for (const platform of ["desktop", "mobile"]) {
-      if (!screens[platform]) continue;
-      content.push({ type: "text", text: `${platform === "desktop" ? "Desktop" : "Mobile"} fold:` }, await imageBlock(screens[platform].lg_path));
-    }
+    const content = await foldBlocks(screens);
     content.push({ type: "text", text: judgeUserText({ domain: site.domain, title: page.title, hasDesktop: !!screens.desktop, hasMobile: !!screens.mobile }) });
     judgement = await ask({ system: JUDGE_SYSTEM, content, schema: JUDGE_SCHEMA, validate: validateJudgement, effort: "medium", usage });
   } catch (err) {
@@ -266,4 +275,85 @@ export async function tagSite(siteOrId, { dryRun = false } = {}) {
   if (!dryRun) await reindexSite(site.id);
   if (!dryRun) await recordEvent(site.id, "tagged", { pages: result.length, sections: result.reduce((n, p) => n + Object.keys(p.sections).length, 0), model: judgeModel(), usage, cost });
   return { pages: result, usage, cost };
+}
+
+/* ---------- Styling ---------- */
+
+// Failed style attempts after which the batch (styleNew) leaves a site alone.
+export const STYLE_MAX_ATTEMPTS = 3;
+
+// Gives a site 1 or 2 styles (STYLES in lib/taxonomy.js) from its desktop and
+// mobile home folds, in a call of its own. Writes only style, styled_at and
+// style_attempts: never status, quality, name, tagline or description, so it is
+// safe on approved sites. With `dryRun` nothing is written. Returns
+// { site, styles, usage, cost } or, for a site with no home capture or two
+// answers outside STYLES, { site, styles: null, error, usage, cost }. API
+// errors are thrown after the SDK's retries, with nothing but an event written.
+export async function styleSite(siteOrId, { dryRun = false } = {}) {
+  const site = await resolveSite(siteOrId);
+  const { page, screens } = await homeScreens(site.id);
+  const usage = {};
+  const failed = async (error, detail) => {
+    const cost = costOf(usage);
+    if (!dryRun) {
+      await run("UPDATE sites SET style_attempts = style_attempts + 1 WHERE id = @id", { id: site.id });
+      await recordEvent(site.id, "style_failed", { ...detail, usage, cost });
+    }
+    return { site, styles: null, error, usage, cost };
+  };
+  if (!screens.desktop && !screens.mobile) return failed("no_capture", { code: "no_capture" });
+  if (!judgeEnabled()) throw new JudgeDisabled();
+
+  let styles;
+  try {
+    const content = await foldBlocks(screens);
+    const task = "Tag this site's style.";
+    content.push({ type: "text", text: judgeUserText({ domain: site.domain, title: page.title, hasDesktop: !!screens.desktop, hasMobile: !!screens.mobile, task }) });
+    ({ styles } = await ask({ system: STYLE_SYSTEM, content, schema: STYLE_SCHEMA, validate: validateStyle, effort: "low", usage }));
+  } catch (err) {
+    if (err instanceof SchemaError) return failed(err.message, { code: "schema", message: err.message, model: judgeModel() });
+    if (!dryRun) await recordEvent(site.id, "style_error", { message: String(err.message).slice(0, 500), status: err.status ?? null, model: judgeModel(), usage, cost: costOf(usage) });
+    throw err;
+  }
+  const cost = costOf(usage);
+  if (!dryRun) {
+    await run("UPDATE sites SET style = @styles, styled_at = @now, style_attempts = 0 WHERE id = @id", { styles, now: new Date().toISOString(), id: site.id });
+    await recordEvent(site.id, "styled", { styles, model: judgeModel(), usage, cost });
+  }
+  return { site, styles, usage, cost };
+}
+
+// Public sites with no style yet and fewer than STYLE_MAX_ATTEMPTS failed
+// attempts, newest approval first, leaving out the ids in `skip`: [{ id, domain }].
+export function unstyledSites(limit, skip = []) {
+  const params = { limit, skip: [...skip], maxAttempts: STYLE_MAX_ATTEMPTS };
+  return all(`SELECT s.id, s.domain FROM sites s
+    WHERE s.style IS NULL AND s.style_attempts < @maxAttempts AND NOT (s.id = ANY(@skip)) AND ${publicSites(params)}
+    ORDER BY s.approved_at DESC NULLS LAST, s.id LIMIT @limit`, params);
+}
+
+// The cron step and `npm run judge -- --style-only`: styles up to `limit`
+// unstyled public sites one at a time, stopping at `signal`. Credentials or
+// quota errors (401/402/403) end the batch; another API error skips the site,
+// which the next batch tries again. Returns the totals.
+export async function styleNew({ limit = 10, signal, log = () => {} } = {}) {
+  const totals = { styled: 0, failed: 0, errors: 0, cost: 0 };
+  const seen = [];
+  while (seen.length < limit && !signal?.aborted) {
+    const [site] = await unstyledSites(1, seen);
+    if (!site) break;
+    seen.push(site.id);
+    try {
+      const r = await styleSite(site.id);
+      totals.cost += r.cost;
+      if (r.styles) totals.styled++;
+      else totals.failed++;
+      log(`${r.styles ? "styled  " : "failed  "} ${site.domain}  ${r.styles ? r.styles.join(", ") : r.error}`);
+    } catch (err) {
+      totals.errors++;
+      log(`error    ${site.domain}: ${err.message}`);
+      if ([401, 402, 403].includes(err.status) || err instanceof JudgeDisabled) break;
+    }
+  }
+  return totals;
 }

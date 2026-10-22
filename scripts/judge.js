@@ -1,12 +1,15 @@
-// Judges captured sites with Claude vision and tags the approved ones.
+// Judges captured sites with Claude vision, and styles and tags the approved ones.
 // Usage: npm run judge -- <siteId|domain> [--dry-run]
 //        npm run judge -- --all-captured [--limit N]
 //        npm run judge -- --retag <siteId|domain>
+//        npm run judge -- --style-only [<siteId|domain> ...] [--limit N] [--dry-run]
+// --style-only writes nothing but the sites' styles (never status, quality,
+// name or description); without a site it styles public sites that have none.
 import "./env.js";
 import { listSites } from "../lib/db.js";
-import { judgeEnabled, judgeModel, judgeSite, minQuality, tagSite } from "../pipeline/judge/index.js";
+import { judgeEnabled, judgeModel, judgeSite, minQuality, styleNew, styleSite, tagSite } from "../pipeline/judge/index.js";
 
-const USAGE = "usage: npm run judge -- <siteId|domain> [--dry-run] | --all-captured [--limit N] | --retag <siteId|domain>";
+const USAGE = "usage: npm run judge -- <siteId|domain> [--dry-run] | --all-captured [--limit N] | --retag <siteId|domain> | --style-only [<siteId|domain> ...] [--limit N] [--dry-run]";
 
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith("--")));
@@ -21,6 +24,18 @@ const dryRun = flags.has("--dry-run");
 if (!judgeEnabled()) {
   console.error("No AI credentials: run `vercel env pull` (OIDC token for AI Gateway) or set AI_GATEWAY_API_KEY or ANTHROPIC_API_KEY.");
   process.exit(1);
+}
+
+if (flags.has("--style-only") && !positional.length) {
+  const limit = limitArg ? Number(limitArg) : Infinity;
+  if (!(limit > 0) || dryRun) {
+    console.error(dryRun ? "--dry-run needs a site: npm run judge -- --style-only <siteId|domain> --dry-run" : USAGE);
+    process.exit(2);
+  }
+  console.error(`model ${judgeModel()}, styling public sites with no style`);
+  const t = await styleNew({ limit, log: console.log });
+  console.error(`styled ${t.styled}, failed ${t.failed}, errors ${t.errors}, about $${t.cost.toFixed(4)}`);
+  process.exit(t.errors ? 1 : 0);
 }
 
 let targets;
@@ -63,6 +78,13 @@ if (!dryRun) console.error(`model ${judgeModel()}, approve at quality >= ${minQu
 let code = 0;
 for (const target of targets) {
   try {
+    if (flags.has("--style-only")) {
+      const r = await styleSite(target, { dryRun });
+      console.log(`${(r.styles ? "styled" : "failed").padEnd(8)} ${r.site.domain}  ${r.styles ? r.styles.join(", ") : r.error}${dryRun ? "  (dry run)" : ""}`);
+      if (!r.styles) code = 1;
+      console.error(`  (${tally(r)})`);
+      continue;
+    }
     if (retag) {
       const r = await tagSite(target, { dryRun });
       console.error(`tagged ${target}: ${r.pages.length} pages (${tally(r)})`);
@@ -78,6 +100,9 @@ for (const target of targets) {
     const why = r.error ?? (r.judgement.capture_ok ? r.judgement.verdict_reasons[0] : `bad capture: ${r.judgement.capture_problem}`);
     console.log(`${r.status.padEnd(8)} ${String(r.judgement?.capture_ok ? r.judgement.quality : "-").padStart(2)}  ${r.site.domain}  ${why ?? ""}`);
     if (r.status === "approved") {
+      const st = await styleSite(r.site);
+      console.log(`         styled ${st.styles ? st.styles.join(", ") : `failed: ${st.error}`}`);
+      tally(st);
       const t = await tagSite(r.site);
       console.log(`         tagged ${t.pages.length} pages`);
       tally(t);

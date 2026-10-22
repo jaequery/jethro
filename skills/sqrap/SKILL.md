@@ -24,17 +24,22 @@ public marketing websites.
 
 ## How
 
-**With the MCP server** (tools named `search_screens`, `search_sections`,
-`get_site`, `find_similar`, `list_filters`):
+**With the MCP server** (tools named `design_brief`, `search_screens`,
+`search_sections`, `get_site`, `find_similar`, `list_filters`):
 
 1. `list_filters` once if you are unsure of a filter value (page patterns,
-   section types, industries, colors, themes, countries).
-2. `search_screens` for whole pages, e.g. `{ "pattern": "Pricing", "industry": "SaaS", "theme": "dark" }`,
+   section types, industries, colors, themes, styles, countries).
+2. `design_brief` to start a page: `{ "pattern": "Pricing", "industry": "SaaS", "theme": "dark", "style": "minimal" }`,
+   optionally with a `reference` domain to rank by look (`"reference": "linear.app"`).
+   It returns 5 to 8 references with palette, section order and the judge's
+   home-page scores, plus the section order they share. These are facts about
+   the references, not advice.
+3. `search_screens` for whole pages, e.g. `{ "pattern": "Pricing", "industry": "SaaS", "theme": "dark", "style": "editorial" }`,
    or `search_sections` for one section type, e.g. `{ "type": "Hero", "q": "AI" }`.
    Add `"include_images": true` to see up to four results inline (512px wide).
-3. `get_site` with a domain from the results (`{ "site": "stripe.com", "platform": "desktop" }`)
+4. `get_site` with a domain from the results (`{ "site": "stripe.com", "platform": "desktop" }`)
    for its other pages and each page's section order.
-4. `find_similar` with a result's `id` for more designs that look like it
+5. `find_similar` with a result's `id` for more designs that look like it
    (`{ "id": "<section id>", "limit": 6 }`), or with a screenshot as base64
    `image` (at most 2 MB, counts as 5 calls; it is not stored).
 
@@ -50,6 +55,7 @@ curl -H "Authorization: Bearer $SQRAP_API_KEY" \
 curl -H "Authorization: Bearer $SQRAP_API_KEY" \
   "https://sqrap.com/api/v1/sections?type=Hero&limit=5"
 curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/sites/stripe.com"
+curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/brief?pattern=Pricing&style=minimal"
 curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/similar?id=<section id>&limit=5"
 ```
 

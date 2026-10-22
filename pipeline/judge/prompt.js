@@ -1,6 +1,6 @@
-// The judge's and tagger's instructions. Both system prompts are fixed text so
+// The judge's, tagger's and styler's instructions. The system prompts are fixed text so
 // they stay byte-identical across calls and can be prompt-cached.
-import { INDUSTRIES, PAGE_PATTERNS, SECTION_TYPES } from "../../lib/taxonomy.js";
+import { INDUSTRIES, PAGE_PATTERNS, SECTION_TYPES, STYLES } from "../../lib/taxonomy.js";
 
 export const JUDGE_SYSTEM = `You are a senior product designer curating an inspiration library like Mobbin or Godly. The library is called Sqrap and only keeps websites that are genuinely well designed.
 
@@ -44,7 +44,17 @@ You are shown one page of a website: first the top of the page at desktop width,
 
 Section types: Navigation is a header or menu bar; Hero is the large opening statement of the page; Logo cloud is a row of customer or partner logos; Features explains product capabilities; Testimonials are quotes or reviews; Pricing table compares plans; FAQ is questions and answers; CTA is a closing call to action; Stats are big numbers; Team shows people; Gallery is a grid of images or work; Newsletter is an email sign-up; Footer is the bottom links area. Use "Other" for anything else (articles, forms, product grids, legal text).`;
 
-export function judgeUserText({ domain, title, hasDesktop, hasMobile }) {
+export const STYLE_SYSTEM = `You are tagging the visual style of websites for Sqrap, a design-inspiration library of real websites. Designers and AI agents filter the library by these styles ("dark, minimal", "editorial"), so pick what a designer would call the site's look at a glance.
+
+You are shown the first screen ("fold") of a website's home page at desktop width and, when available, at mobile width. Judge only the visual design on screen, not the brand, the industry or how good the design is.
+
+styles: 1 or 2 values, the most fitting first; add a second only when it clearly applies too. Exactly from this list:
+${STYLES.map((s) => `- ${s.id}: ${s.hint}`).join("\n")}
+
+Light or dark is recorded elsewhere; do not pick a style only because the page is dark.`;
+
+// The user text after the folds; `task` is the last line.
+export function judgeUserText({ domain, title, hasDesktop, hasMobile, task = "Judge this site." }) {
   const shown = [hasDesktop && "the desktop fold", hasMobile && "the mobile fold"].filter(Boolean).join(" and ");
-  return `Domain: ${domain}\nPage title: ${title || "(none)"}\nShown: ${shown}.\n\nJudge this site.`;
+  return `Domain: ${domain}\nPage title: ${title || "(none)"}\nShown: ${shown}.\n\n${task}`;
 }

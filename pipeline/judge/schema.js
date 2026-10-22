@@ -1,7 +1,7 @@
 // JSON schemas for the judge's and tagger's structured output, with enums taken
 // from lib/taxonomy.js, plus validators that check again in JS (the API cannot
 // enforce numeric ranges or string lengths).
-import { INDUSTRIES, PAGE_PATTERNS, SECTION_TYPES } from "../../lib/taxonomy.js";
+import { INDUSTRIES, PAGE_PATTERNS, SECTION_TYPES, STYLES, STYLES_PER_SITE } from "../../lib/taxonomy.js";
 
 export const SCORE_KEYS = ["typography", "layout", "color", "imagery", "originality", "polish"];
 export const TAGLINE_MAX = 60;
@@ -27,6 +27,16 @@ export const JUDGE_SCHEMA = obj({
 export const TAG_SCHEMA = obj({
   pattern: { type: "string", enum: [...PAGE_PATTERNS] },
   sections: { type: "array", items: obj({ id: { type: "string" }, type: { type: "string", enum: [...SECTION_TYPES] } }) },
+});
+
+// The style-only call (styleSite): nothing but the styles, so it can never
+// carry a quality, status, name or description.
+export const STYLE_SCHEMA = obj({
+  styles: {
+    type: "array",
+    items: { type: "string", enum: STYLES.map((st) => st.id) },
+    description: `${STYLES_PER_SITE.min} or ${STYLES_PER_SITE.max} styles, the most fitting first`,
+  },
 });
 
 export class SchemaError extends Error {}
@@ -78,4 +88,13 @@ export function validateTags(t, sectionIds) {
   const missing = sectionIds.filter((id) => !types.has(id));
   if (missing.length) throw new SchemaError(`${missing.length} sections untagged`);
   return { pattern: t.pattern, sections: sectionIds.map((id) => ({ id, type: types.get(id) })) };
+}
+
+// The styles in a style answer: known values, without repeats, at most
+// STYLES_PER_SITE.max of them in the model's order. Throws when none is left.
+export function validateStyle(t) {
+  const known = new Set(STYLES.map((st) => st.id));
+  const styles = [...new Set(Array.isArray(t?.styles) ? t.styles : [])].filter((v) => known.has(v)).slice(0, STYLES_PER_SITE.max);
+  if (styles.length < STYLES_PER_SITE.min) throw new SchemaError(`no known style in ${JSON.stringify(t?.styles ?? null).slice(0, 100)}`);
+  return { styles };
 }

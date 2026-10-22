@@ -1,6 +1,6 @@
 // The orchestrator behind `npm run pipeline`: takes sites through
-// discovered → captured (home) → judged → (if approved) subpages captured →
-// tagged, a few sites at a time. Postgres is the queue: every site is claimed with
+// discovered → captured (home) → judged → (if approved) styled → subpages
+// captured → tagged, a few sites at a time. Postgres is the queue: every site is claimed with
 // one atomic UPDATE, so runs can overlap, crash and resume from DB state.
 import { appendFileSync, mkdirSync, statfsSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
@@ -14,7 +14,7 @@ import { reindexSite } from "../lib/search.js";
 import { purgeSiteShots, removeShots, removeSiteShots, shotsDir } from "../lib/shots.js";
 import { captureHome, captureSubpages, closeBrowser } from "./capture.js";
 import { discover } from "./discover/index.js";
-import { judgeEnabled, judgeSite, tagSite } from "./judge/index.js";
+import { judgeEnabled, judgeSite, styleSite, tagSite } from "./judge/index.js";
 
 const STALE_MS = 30 * 60 * 1000; // a transient status untouched this long belongs to a dead run
 const RECYCLE_EVERY = 50; // sites per browser, to keep Chromium's memory in check
@@ -102,7 +102,7 @@ export async function runPipeline(options = {}, { signal } = {}) {
   let judgeOn = judgeEnabled();
   const totals = {
     discovered: 0, claimed: 0, captured: 0, approved: 0, rejected: 0, failed: 0, skipped: 0,
-    deferred: 0, tagged: 0, aiCalls: 0, cost: 0, diskAdded: 0, stopped: null,
+    deferred: 0, styled: 0, tagged: 0, aiCalls: 0, cost: 0, diskAdded: 0, stopped: null,
   };
 
   if (opts.dryRun) {
@@ -118,7 +118,7 @@ export async function runPipeline(options = {}, { signal } = {}) {
   await recordEvent(null, "pipeline_started", { run: runId, pid: process.pid, options: opts });
   log(`run ${runId}: limit ${opts.limit}, concurrency ${opts.concurrency}, max AI calls ${opts.maxJudge}`, { event: "start", options: opts });
   if (!judgeOn) log("warning: no AI credentials (ANTHROPIC_API_KEY, AI_GATEWAY_API_KEY or a Vercel OIDC token), so sites are captured but not judged; they stay 'captured' for a later run");
-  else if (opts.maxJudge < 2) log("warning: judging a site needs room for 2 AI calls (judge + tag); --max-judge below 2 judges nothing");
+  else if (opts.maxJudge < 3) log("warning: judging a site needs room for 3 AI calls (judge + style + tag); --max-judge below 3 judges nothing");
 
   // Resume: sites a crashed run left in a transient status become claimable again.
   for (const r of await resetStaleClaims(new Date(Date.now() - STALE_MS).toISOString())) {
@@ -152,8 +152,8 @@ export async function runPipeline(options = {}, { signal } = {}) {
 
   const diskBefore = await dirSize(shotsDir);
 
-  // AI budget: judging reserves 2 calls (judge + tag) and hands one back when the
-  // site is not approved; finishing an approved site reserves 1.
+  // AI budget: judging reserves 3 calls (judge + style + tag) and hands two back
+  // when the site is not approved; finishing an approved site reserves 1.
   let budget = opts.maxJudge;
   const take = (n) => (judgeOn && budget >= n ? ((budget -= n), true) : false);
   const give = (n) => { budget += n; };
@@ -185,10 +185,10 @@ export async function runPipeline(options = {}, { signal } = {}) {
       if (site) return { kind: "finish", site };
       give(1);
     }
-    if (take(2)) {
+    if (take(3)) {
       const site = await claimSite("judge", { exclude: seen });
       if (site) return { kind: "judge", site };
-      give(2);
+      give(3);
     }
     for (;;) {
       const site = await claimSite("capture", { exclude: seen });
@@ -222,7 +222,7 @@ export async function runPipeline(options = {}, { signal } = {}) {
     } catch (err) {
       // judgeSite put the site back to captured; the next run retries it.
       totals.aiCalls++;
-      give(1);
+      give(2);
       say(i, site.domain, `judge error, left captured: ${err.message}`, Date.now() - t, { event: "judge_error" });
       // Bad credentials, no credits or a model the account may not use: every
       // later call would fail the same way, so capture only for the rest of the
@@ -234,7 +234,7 @@ export async function runPipeline(options = {}, { signal } = {}) {
       return;
     }
     if (r.error === "no_capture") {
-      give(2);
+      give(3);
       totals.failed++;
       say(i, site.domain, "failed: no home capture to judge", null, { event: "failed" });
       return;
@@ -246,13 +246,29 @@ export async function runPipeline(options = {}, { signal } = {}) {
     say(i, site.domain, `${r.status}${quality}`, Date.now() - t, { event: r.status, quality: r.judgement?.quality ?? null, cost: r.cost });
 
     if (r.status !== "approved") {
-      give(1);
+      give(2);
       if (r.status === "rejected" && opts.pruneRejected) await prune(site.id, i, site.domain);
       return;
     }
+    await style(site, i);
     // Hidden from the library until its subpages and tags are in.
     if (!(await moveSite(site.id, "approved", "capturing"))) return;
     await finish(site, links, i);
+  }
+
+  // Gives a just-approved site its styles. A failure leaves the style empty for
+  // the style batch (styleNew: the cron route, `npm run judge -- --style-only`).
+  async function style(site, i) {
+    const t = Date.now();
+    totals.aiCalls++;
+    try {
+      const r = await styleSite(site.id);
+      totals.cost += r.cost;
+      if (r.styles) totals.styled++;
+      say(i, site.domain, r.styles ? `styled ${r.styles.join(", ")}` : `style failed: ${r.error}`, Date.now() - t, { event: r.styles ? "styled" : "style_failed" });
+    } catch (err) {
+      say(i, site.domain, `style error, left for the style batch: ${err.message}`, Date.now() - t, { event: "style_error" });
+    }
   }
 
   // Captures an approved site's subpages and tags every page, then puts it back
@@ -313,13 +329,13 @@ export async function runPipeline(options = {}, { signal } = {}) {
     say(i, site.domain, `captured (${home.sections} sections)`, Date.now() - t, { event: "captured" });
 
     if (!judgeOn) return;
-    if (!take(2)) {
+    if (!take(3)) {
       totals.deferred++;
       if (!warnedBudget) log(`AI call budget (${opts.maxJudge}) used up: further sites stay 'captured' for the next run`);
       warnedBudget = true;
       return;
     }
-    if (!(await moveSite(site.id, "captured", "judging"))) return give(2);
+    if (!(await moveSite(site.id, "captured", "judging"))) return give(3);
     await judgeAndFinish(site, home.links, i);
   }
 
@@ -378,7 +394,7 @@ export function summaryTable(t) {
   const rows = [
     ["discovered", t.discovered], ["claimed", t.claimed], ["captured", t.captured],
     ["approved", t.approved], ["rejected", t.rejected], ["failed", t.failed], ["skipped", t.skipped],
-    ["left captured (budget)", t.deferred], ["tagged", t.tagged], ["AI calls", t.aiCalls],
+    ["left captured (budget)", t.deferred], ["styled", t.styled], ["tagged", t.tagged], ["AI calls", t.aiCalls],
     ["est. cost", `$${t.cost.toFixed(4)}`], ["disk added", formatBytes(t.diskAdded)],
     ["time", secs(t.elapsed ?? 0)], ["stopped", STOP_LABELS[t.stopped] ?? t.stopped],
   ];

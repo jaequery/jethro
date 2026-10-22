@@ -3,6 +3,7 @@ import { queueCounts } from "../../../../lib/db";
 import { embeddingsEnabled } from "../../../../lib/embeddings";
 import { retryPendingPurges } from "../../../../lib/shots";
 import { embedNew } from "../../../../pipeline/embed";
+import { judgeEnabled, styleNew } from "../../../../pipeline/judge/index";
 import { runPipeline } from "../../../../pipeline/run";
 
 export const dynamic = "force-dynamic";
@@ -13,16 +14,18 @@ export const maxDuration = 800;
 const STOP_CLAIMING_MS = 300 * 1000;
 const EMBED_LIMIT = 64;
 const EMBED_MS = 60 * 1000;
+const STYLE_LIMIT = 8;
+const STYLE_MS = 60 * 1000;
 
 // Each run: pull a few new sites from the galleries (time-boxed, so a slow
 // gallery cannot eat the run), then take a few sites through capture → judge →
-// subpages → tags, one at a time (a function has no GPU and little CPU, so a
+// style → subpages → tags, one at a time (a function has no GPU and little CPU, so a
 // page takes about a minute). Fewer subpages than a local run keep an approved
 // site within one run. The schedule in vercel.json sets how often it runs. Claims are atomic, so a run
 // that overlaps another (or a local `npm run pipeline`) never doubles up.
 const RUN = {
   discover: true, discoverLimit: 15, discoverMs: 90 * 1000,
-  limit: 6, concurrency: 1, maxJudge: 12, subpages: 4, retryFailed: true,
+  limit: 6, concurrency: 1, maxJudge: 18, subpages: 4, retryFailed: true,
 };
 
 // Vercel Cron calls this with `Authorization: Bearer $CRON_SECRET`.
@@ -41,7 +44,12 @@ export async function GET(request) {
   const embeddings = embeddingsEnabled()
     ? await embedNew({ limit: EMBED_LIMIT, signal: AbortSignal.timeout(EMBED_MS), log: console.error }).catch((err) => ({ error: err.message }))
     : { skipped: "no AI Gateway credentials" };
+  // Styles for sites approved before styling existed, or whose style call
+  // failed in their own run: a few per run, time-boxed like the embeddings.
+  const styles = judgeEnabled()
+    ? await styleNew({ limit: STYLE_LIMIT, signal: AbortSignal.timeout(STYLE_MS), log: console.error }).catch((err) => ({ error: err.message }))
+    : { skipped: "no AI credentials" };
   const queued = (await queueCounts()).capture;
   const totals = await runPipeline(RUN, { signal: AbortSignal.timeout(STOP_CLAIMING_MS) });
-  return Response.json({ data: { queued, ...totals, purges, agentUsage, embeddings } }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ data: { queued, ...totals, purges, agentUsage, embeddings, styles } }, { headers: { "Cache-Control": "no-store" } });
 }
