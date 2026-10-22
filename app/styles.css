@@ -268,8 +268,11 @@ a.chip-outline:hover { background: var(--surface); }
 div.card { position: relative; cursor: default; }
 .card-main { display: block; width: 100%; border: 0; padding: 0; background: none; color: inherit; cursor: pointer; text-align: left; border-radius: var(--r-lg); }
 .card-main::after { content: ""; position: absolute; inset: 0; }
-.card:hover:not(:has(.cap-out:hover)) .frame { border-color: var(--line-2); }
-.card:hover:not(:has(.cap-out:hover)) .frame img { transform: scale(1.015); }
+.card:hover .frame { border-color: var(--line-2); }
+.card:hover .frame img { transform: scale(1.015); }
+/* Hovering the domain link is not hovering the card. */
+.card:has(.cap-out:hover) .frame { border-color: var(--line); }
+.card:has(.cap-out:hover) .frame img { transform: none; }
 .cap {
   margin-top: 12px; font-size: 15px; color: var(--mute);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -281,7 +284,7 @@ div.card { position: relative; cursor: default; }
 /* Inside the caption's overflow box an outer ring would be clipped. */
 .cap-out:focus-visible { outline-offset: -2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) {
-  .card:hover .frame img, .card:hover:not(:has(.cap-out:hover)) .frame img { transform: none; }
+  .card:hover .frame img { transform: none; }
 }
 /* ---------- Infinite scroll ---------- */
 /* Empty marker below the grid; holds the retry chip when a batch fails. */
