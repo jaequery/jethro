@@ -1,6 +1,7 @@
 import "./styles.css";
 
 export const metadata = {
+  metadataBase: new URL("https://sqrap.com"),
   title: "Sqrap — design inspiration library",
   description: "Browse, search and filter real, well-designed websites by page, section, platform and industry.",
 };

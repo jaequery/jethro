@@ -113,6 +113,10 @@ Chevrons and clear buttons are 14px in `--mute`.
   (`.wordmark`). The wordmark is plain type, with no outline or pill around it.
 - **Right** (`.topbar-end`): the search field, then an "About" text link
   (`.top-link`) that opens the About dialog.
+- Signed out, a "Sign in" `.top-link` follows About. Signed in, a 32px round
+  avatar (`.avatar`, the initial on `--chip`, `--surface-2` on hover or while
+  open) opens the account menu: a `.menu` right-aligned under it with the email
+  as a `--faint` group label, then "API keys" and "Sign out".
 - No border, no fill, no shadow.
 
 ### Search (`.search`)
@@ -228,7 +232,7 @@ card that opened it. The bar: the site name at 500 over a `--mute` caption
 The round prev / next buttons share the `--chip-dark` fill (`--chip-dark-2` on
 hover). The shot sits in a white `--r-lg` frame and scrolls inside it.
 
-### Dialogs (About, Request removal)
+### Dialogs (About, Request removal, Sign in, API keys)
 `--r-card` (24px), a `--line` hairline, `--shadow-pop`, 32px padding (24px on
 phones), at most 460px wide. The title is display type (28px/500,
 `--track-display`), the body `--ink-2`. Inputs are 44px `--r-pill` fields on
@@ -236,6 +240,13 @@ phones), at most 460px wide. The title is display type (28px/500,
 and the focus ring stays `--accent`. An invalid field gets a 1px inset `--ink`
 ring. The primary button is a 40px full pill in `--ink` with white text;
 secondary actions ("Close") are `.chip` buttons.
+
+**API keys** (`#/keys`) is a dialog of the same kind: a list of keys
+(`.key-list`), one per row between `--line` hairlines, the name at 500 over a
+14.5px `--mute` line (prefix · created date) with a `.chip` "Revoke" on the
+right ("Confirm revoke" on the first press). A new key appears once in a box
+with a `--line-2` hairline and `--r-lg`, in monospace on `--chip`, with a `.chip`
+"Copy" beside it.
 
 ### Empty and error states
 Centred: a display title (28px/500, `--track-display`), a muted line, and a

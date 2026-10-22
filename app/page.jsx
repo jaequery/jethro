@@ -88,6 +88,29 @@ export default function Page() {
         <p className="auth-switch"><span id="auth-switch-text"></span> <a className="link" id="auth-switch" href="#/signup">Sign up</a></p>
       </dialog>
 
+      <dialog id="keys" aria-labelledby="keys-title">
+        <h2 id="keys-title">API keys</h2>
+        <p>Keys let your scripts and AI agents read Sqrap through the <a className="link" href="/api/v1/openapi.json" target="_blank" rel="noopener">API</a>. Send one as <code>Authorization: Bearer &lt;key&gt;</code>, and follow the <a className="link" href="/terms">terms for agents</a>.</p>
+        <div className="key-new" id="keys-new" hidden>
+          <p>Copy your new key now. Sqrap keeps only a fingerprint of it, so it is not shown again.</p>
+          <div className="key-reveal">
+            <code id="keys-new-value"></code>
+            <button className="chip" type="button" id="keys-copy">Copy</button>
+          </div>
+        </div>
+        <ul className="key-list" id="keys-list" aria-label="Your keys"></ul>
+        <form id="keys-form" noValidate>
+          <label className="field" data-field="name">Name (optional)
+            <input name="name" type="text" autoComplete="off" placeholder="e.g. Claude Code on my laptop" maxLength={60} />
+          </label>
+          <p className="form-status" id="keys-status" role="status"></p>
+          <div className="row">
+            <button className="btn-primary" type="submit" id="keys-create">Create key</button>
+            <button className="chip" type="button" id="keys-close">Close</button>
+          </div>
+        </form>
+      </dialog>
+
       <Sqrap />
     </>
   );

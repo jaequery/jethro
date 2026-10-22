@@ -458,8 +458,75 @@ browsing never requires an account. It is hand-rolled, with no auth library:
   `lib/auth.js` holds the server logic; the dialog lives in `app/page.jsx` and
   `lib/sqrap.js` (`#/signin`, `#/signup`).
 
-Not built yet: email verification, password reset, and anything that uses the
-account (saved collections).
+Not built yet: email verification, password reset and saved collections. The
+one thing an account unlocks today is API keys (see Agent API).
+
+## Agent API
+
+A read-only, keyed JSON API for scripts and AI agents under `/api/v1/`,
+described by a hand-written OpenAPI 3.1 spec at `/api/v1/openapi.json` (no key
+needed; `lib/openapi.js`, keep it in step with the routes). The MCP server wraps it.
+
+| Route | Returns |
+| --- | --- |
+| `GET /api/v1/sites` | Sites with a screen matching every filter, each with a desktop and mobile cover screen |
+| `GET /api/v1/sites/{id or domain}` | One site (`stripe.com`, a URL or an id): pages, and screens each with their sections top to bottom |
+| `GET /api/v1/screens` | Page screenshots |
+| `GET /api/v1/sections` | Page sections (`section` or `type` picks the type) |
+| `GET /api/v1/filters` | Every filter value with its count |
+
+Lists take `q`, `platform`, `pattern`, `section`, `industry`, `color`, `theme`,
+`country`, `limit` (1 to 100) and `cursor` (the previous page's `next`); a filter
+value outside `lib/taxonomy.js` answers 400. Only public sites (the same rule
+as the browser API, so never rejected or opted-out ones) come back. Every record
+carries the source `domain` and `sourceUrl`; screens add `palette`, `dominant`,
+`theme` and `color`; sections add their `position` on the page; sites add
+`homePageJudge`, the judge's six scores and up to three reasons, which judge only
+the home page's first screens. `topOfPageOnly: true` marks images that show only
+the top of the page. Images are only the agent tiles and the small `sm`
+thumbnails, never the full-page or large shots. Successful reads send
+`Cache-Control: s-maxage=300` with `Vary: Authorization`. Vercel's CDN never
+caches a request that carries `Authorization`, so every call through it reaches
+the key check and the quota; a caller's own shared proxy may still replay a
+key's response for a few minutes, even after the key is revoked.
+`/api/v1/sites/blog.example.com` never falls back to `example.com`.
+
+**Keys.** A signed-in user creates up to 3 keys under the avatar menu → API keys
+(`#/keys`). A key (`sqrap_…`) is shown once; Postgres keeps only its SHA-256 in
+`api_keys` (migration `008`), and revoking deletes the row. Callers send it as
+`Authorization: Bearer <key>`; a missing, unknown or revoked key answers 401.
+Routes: `app/api/account/keys` (GET list, POST create) and
+`app/api/account/keys/[id]` (DELETE revoke), JSON bodies only.
+
+```sh
+curl -H "Authorization: Bearer $SQRAP_KEY" https://sqrap.com/api/v1/sites/stripe.com
+```
+
+**Quota.** Each key may make `SQRAP_API_DAILY_QUOTA` calls (default 1000) per
+UTC day; past that, calls answer 429 with `Retry-After` (seconds to midnight
+UTC). Every answer carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. The
+counters live in Upstash Redis: add it from the Vercel Marketplace, which sets
+`KV_REST_API_URL`/`KV_REST_API_TOKEN` (or set `UPSTASH_REDIS_REST_URL`/
+`UPSTASH_REDIS_REST_TOKEN`). Without them (local dev) the counters are in memory,
+per server instance, with a warning logged once, and on Vercel the cron
+snapshot is skipped rather than overwrite the table with zeros. No call writes to Postgres. If
+Redis cannot be reached, calls are let through and the error is logged.
+
+**Usage.** Each ISO week Redis keeps the set of keys that made a successful (200) call
+(counted exactly with `SCARD`) and a counter per endpoint or MCP tool
+(`v1/screens`, `v1/site`, …); an MCP tool calls `chargeCall` before and
+`recordUsage` after, like `agentResponse`. Every cron run copies the running and the previous
+week into `agent_usage_weekly` (`metric` `active_keys` or `calls`):
+
+```sql
+SELECT week, metric, name, value FROM agent_usage_weekly ORDER BY week DESC, metric, name;
+```
+
+**Per-IP backstop.** Keys bound each account, not each caller, so turn on a
+Vercel WAF rate-limit rule as well (Project → Firewall → Configure → New rule):
+If *Request Path* starts with `/api/v1/`, then *Rate Limit*, fixed window,
+60 seconds, 120 requests, keyed on *IP*, action *Too Many Requests (429)*. The
+owner turns it on in the dashboard; nothing in the code depends on it.
 
 ## Files
 
@@ -490,14 +557,16 @@ account (saved collections).
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
 - `app/terms/page.jsx`: the terms for agents and API use
-- `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts)
+- `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts) and API keys
+- `app/api/v1/**`, `lib/agent-api.js`, `lib/agent-quota.js`, `lib/openapi.js`, `app/api/account/keys/**`: the agent API, its quota and usage counters, its OpenAPI spec and key management (see Agent API)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
 - `lib/sqrap.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
 
 ## URLs
 
 State lives in the hash, so every view can be shared:
-`#/apps` (sites), `#/screens`, `#/sections`, `#/app/<id>` (one site), plus
+`#/apps` (sites), `#/screens`, `#/sections`, `#/app/<id>` (one site), `#/keys`
+(the API keys dialog, after signing in), plus
 `?q=&platform=&pattern=&section=&industry=&color=&theme=&country=`. `platform`
 is `desktop` or `mobile`, `color` a color bucket, `theme` `light` or `dark` and
 `country` a two-letter code such as `JP`.
