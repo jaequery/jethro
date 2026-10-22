@@ -67,6 +67,8 @@ export default function Agents() {
           <p>For Claude Code there is also a <a href="https://github.com/jaequery/sqrap/blob/main/skills/sqrap/SKILL.md">Sqrap skill</a> that tells the agent when to reach for Sqrap. Install it for all your projects with:</p>
           <CodeBlock label="Terminal">{SKILL}</CodeBlock>
 
+          <p>If your client reports that the server needs authentication or that OAuth failed, the <code>Authorization</code> header is missing or the key is wrong or revoked: Sqrap uses API keys, not OAuth.</p>
+
           <h2>Prefer plain HTTP?</h2>
           <p>The same data is in the REST API, described by its <a href="/api/v1/openapi.json">OpenAPI spec</a>.</p>
           <CodeBlock label="Terminal">{CURL}</CodeBlock>

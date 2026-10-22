@@ -524,7 +524,7 @@ SELECT week, metric, name, value FROM agent_usage_weekly ORDER BY week DESC, met
 
 **Per-IP backstop.** Keys bound each account, not each caller, so turn on a
 Vercel WAF rate-limit rule as well (Project → Firewall → Configure → New rule):
-If *Request Path* starts with `/api/v1/`, then *Rate Limit*, fixed window,
+If *Request Path* starts with `/api/v1/` or equals `/mcp`, then *Rate Limit*, fixed window,
 60 seconds, 120 requests, keyed on *IP*, action *Too Many Requests (429)*. The
 owner turns it on in the dashboard; nothing in the code depends on it.
 
