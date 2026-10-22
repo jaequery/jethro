@@ -1,6 +1,7 @@
 // The capture engine: loads a site's pages at desktop and mobile widths, stores
-// full-page, thumbnail and per-section WebP images as shots under <siteId>/
-// (lib/shots.js), and records them as pages, screens and sections rows.
+// full-page, thumbnail, per-section and agent-sized (pipeline/agent-images.js)
+// WebP images as shots under <siteId>/ (lib/shots.js), and records them as
+// pages, screens, sections and agent_images rows.
 //
 // Exports captureHome, captureSubpages and closeBrowser so a caller can reuse
 // one browser across many sites.
@@ -8,12 +9,13 @@ import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import {
   deletePage, deleteScreensForPage, getSite, insertPage, insertScreen, insertSection,
-  isOptedOut, listPages, recordEvent, tx, upsertSite,
+  isOptedOut, listPages, recordEvent, setAgentImages, tx, upsertSite,
 } from "../lib/db.js";
 import { colorTags } from "../lib/color.js";
 import { reindexSite } from "../lib/search.js";
 import { purgeSiteShots, putShot, removeShots } from "../lib/shots.js";
 import { PLATFORMS } from "../lib/taxonomy.js";
+import { agentRaw, writeAgentTiles } from "./agent-images.js";
 import { closeBrowser, newContext, VIEWPORTS } from "./browser.js";
 import { MAX_HEIGHT, preparePage } from "./prepare.js";
 import { findSections, guessSectionType } from "./sections.js";
@@ -163,8 +165,8 @@ async function writeWebp(pipeline, rel, quality) {
   return buf.info;
 }
 
-// Writes full, lg, sm and section images for one screenshot. Returns screen
-// fields and section rows, with shot paths.
+// Writes full, lg, sm, section and agent images for one screenshot. Returns
+// screen fields and section rows, with shot paths, plus the agent tiles of each.
 async function writeScreen(site, slug, platform, shot) {
   const size = SIZES[platform];
   const dpr = VIEWPORTS[platform].deviceScaleFactor;
@@ -190,6 +192,12 @@ async function writeScreen(site, slug, platform, shot) {
   await writeWebp(thumb(lgW, lgH), `${base}-lg.webp`, 82);
   await writeWebp(thumb(...size.sm), `${base}-sm.webp`, 80);
 
+  // Agent images: the screen at the agent width, cut into tiles; each section is
+  // cut from the same downscaled pixels, so the PNG is decoded once for all.
+  const agent = await agentRaw(shot.png, platform);
+  const agentScale = agent.info.width / meta.width;
+  const agentTiles = await writeAgentTiles(agent, base);
+
   const sections = [];
   for (const [i, s] of shot.sections.entries()) {
     const y = Math.round(s.y * dpr);
@@ -202,7 +210,10 @@ async function writeScreen(site, slug, platform, shot) {
     const smPath = `${dir}/sections/${id}-sm.webp`;
     await writeWebp(crop().resize({ width: size.section }), imgPath, 74);
     await writeWebp(crop().resize({ width: size.sectionSm }), smPath, 78);
-    sections.push({ id, type: guessSectionType(s, i, shot.sections.length), y: s.y, height: s.height, imgPath, smPath });
+    const sectionAgentTiles = await writeAgentTiles(agent, `${dir}/sections/${id}`, { top: y * agentScale, height: h * agentScale });
+    sections.push({
+      id, type: guessSectionType(s, i, shot.sections.length), y: s.y, height: s.height, imgPath, smPath, agentTiles: sectionAgentTiles,
+    });
   }
 
   const colors = await paletteOf(top);
@@ -212,6 +223,7 @@ async function writeScreen(site, slug, platform, shot) {
       fullPath: `${base}-full.webp`, lgPath: `${base}-lg.webp`, smPath: `${base}-sm.webp`,
       dominant: colors.dominant, palette: colors.palette, ...colorTags(colors.dominant, colors.palette),
     },
+    agentTiles,
     sections,
     colors,
   };
@@ -237,7 +249,11 @@ async function capturePage(site, { url, path: pagePath, pattern }, { wantLinks =
     const stale = await deleteScreensForPage(page.id);
     for (const { id: platform } of PLATFORMS) {
       const screen = await insertScreen({ siteId: site.id, pageId: page.id, capturedAt, ...written[platform].screen });
-      for (const s of written[platform].sections) await insertSection({ ...s, screenId: screen.id, siteId: site.id });
+      await setAgentImages({ siteId: site.id, screenId: screen.id, status: "full", tiles: written[platform].agentTiles });
+      for (const s of written[platform].sections) {
+        await insertSection({ ...s, screenId: screen.id, siteId: site.id });
+        await setAgentImages({ siteId: site.id, sectionId: s.id, status: "full", tiles: s.agentTiles });
+      }
     }
     return { stale, page };
   });
@@ -246,7 +262,8 @@ async function capturePage(site, { url, path: pagePath, pattern }, { wantLinks =
   // Old files this capture did not overwrite.
   const fresh = new Set(PLATFORMS.flatMap(({ id }) => [
     written[id].screen.fullPath, written[id].screen.lgPath, written[id].screen.smPath,
-    ...written[id].sections.flatMap((s) => [s.imgPath, s.smPath]),
+    ...written[id].agentTiles.map((t) => t.path),
+    ...written[id].sections.flatMap((s) => [s.imgPath, s.smPath, ...s.agentTiles.map((t) => t.path)]),
   ]));
   await removeShots(stale.filter((p) => !fresh.has(p)));
 

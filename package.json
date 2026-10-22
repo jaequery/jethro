@@ -15,7 +15,8 @@
     "pipeline:status": "node scripts/pipeline-status.js",
     "search:reindex": "node scripts/search-reindex.js",
     "color:backfill": "node scripts/color-backfill.js",
-    "import:sqlite": "node scripts/import-sqlite.js"
+    "import:sqlite": "node scripts/import-sqlite.js",
+    "agent:backfill": "node scripts/backfill-agent.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
