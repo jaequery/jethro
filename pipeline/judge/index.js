@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getVercelOidcToken } from "@vercel/oidc";
 import { all, get, getSite, getSiteByDomain, recordEvent, run, tx, upsertSite } from "../../lib/db.js";
 import { reindexSite } from "../../lib/search.js";
+import { purgeSiteShots } from "../../lib/shots.js";
 import { imageBlock } from "./images.js";
 import { JUDGE_SYSTEM, TAG_SYSTEM, judgeUserText } from "./prompt.js";
 import { JUDGE_SCHEMA, SchemaError, TAG_SCHEMA, validateJudgement, validateTags } from "./schema.js";
@@ -139,6 +140,7 @@ export async function judgeSite(siteOrId, { dryRun = false } = {}) {
   if (!screens.desktop && !screens.mobile) {
     if (!dryRun) {
       await upsertSite({ domain: site.domain, status: "failed", lastError: "no_capture" });
+      if (site.approved_at) await purgeSiteShots(site.id);
       await recordEvent(site.id, "judge_failed", { code: "no_capture" });
     }
     return { site, status: "failed", error: "no_capture", usage, cost: 0 };
@@ -163,6 +165,7 @@ export async function judgeSite(siteOrId, { dryRun = false } = {}) {
     if (dryRun) throw err;
     if (err instanceof SchemaError) {
       await upsertSite({ domain: site.domain, status: "failed", lastError: `judge_schema: ${err.message}`.slice(0, 500), judgedAt: new Date().toISOString() });
+      if (site.approved_at) await purgeSiteShots(site.id);
       await recordEvent(site.id, "judge_failed", { code: "schema", message: err.message, model: judgeModel(), usage, cost });
       return { site: await getSite(site.id), status: "failed", error: err.message, usage, cost };
     }
@@ -195,6 +198,9 @@ export async function judgeSite(siteOrId, { dryRun = false } = {}) {
     });
   }
   await reindexSite(site.id);
+  // A site that was approved before (a re-judge, or a recapture of an old one)
+  // and is not now leaves public view: drop its images from the CDN cache.
+  if (status !== "approved" && site.approved_at) await purgeSiteShots(site.id);
   await recordEvent(site.id, "judged", {
     status, quality: judgement.quality, capture_ok: judgement.capture_ok,
     ...(judgement.capture_ok ? {} : { capture_problem: judgement.capture_problem }),

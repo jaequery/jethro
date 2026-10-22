@@ -1,4 +1,5 @@
 import { queueCounts } from "../../../../lib/db";
+import { retryPendingPurges } from "../../../../lib/shots";
 import { runPipeline } from "../../../../pipeline/run";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,10 @@ export async function GET(request) {
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return new Response("Not found", { status: 404 });
   }
+  // CDN purges that could not run where the site left public view (local
+  // admin or pipeline without VERCEL_PURGE_TOKEN): a few seconds at most.
+  const purges = await retryPendingPurges({ limit: 64, ms: 15 * 1000 }).catch((err) => ({ error: err.message }));
   const queued = (await queueCounts()).capture;
   const totals = await runPipeline(RUN, { signal: AbortSignal.timeout(STOP_CLAIMING_MS) });
-  return Response.json({ data: { queued, ...totals } }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ data: { queued, ...totals, purges } }, { headers: { "Cache-Control": "no-store" } });
 }

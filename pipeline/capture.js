@@ -12,7 +12,7 @@ import {
 } from "../lib/db.js";
 import { colorTags } from "../lib/color.js";
 import { reindexSite } from "../lib/search.js";
-import { putShot, removeShots } from "../lib/shots.js";
+import { purgeSiteShots, putShot, removeShots } from "../lib/shots.js";
 import { PLATFORMS } from "../lib/taxonomy.js";
 import { closeBrowser, newContext, VIEWPORTS } from "./browser.js";
 import { MAX_HEIGHT, preparePage } from "./prepare.js";
@@ -280,12 +280,15 @@ async function recordFailure(site, err, previousStatus) {
     status: failed ? "failed" : previousStatus,
     ...(err.finalUrl ? { url: err.finalUrl } : {}),
   });
+  // A recapture of a site that was approved before takes it out of public view.
+  if (failed && site.approved_at) await purgeSiteShots(site.id);
   await recordEvent(site.id, "capture_failed", { code, message: String(err.message).slice(0, 500), attempts, url: siteUrl(site) });
 }
 
 // Opted-out or robots-disallowed: nothing is written, the reason is logged.
 async function recordSkip(site, err) {
   if (err instanceof OptedOut) await upsertSite({ domain: site.domain, status: "optout" });
+  if (site.approved_at) await purgeSiteShots(site.id);
   await recordEvent(site.id, "capture_skipped", { reason: err.code, message: err.message });
 }
 

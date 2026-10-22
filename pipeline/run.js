@@ -11,7 +11,7 @@ import {
   requeueFailed, requeueOldCaptures, resetStaleClaims, setSiteStatus, statusCounts,
 } from "../lib/db.js";
 import { reindexSite } from "../lib/search.js";
-import { removeShots, removeSiteShots, shotsDir } from "../lib/shots.js";
+import { purgeSiteShots, removeShots, removeSiteShots, shotsDir } from "../lib/shots.js";
 import { captureHome, captureSubpages, closeBrowser } from "./capture.js";
 import { discover } from "./discover/index.js";
 import { judgeEnabled, judgeSite, tagSite } from "./judge/index.js";
@@ -125,6 +125,8 @@ export async function runPipeline(options = {}, { signal } = {}) {
     const crashed = r.last_error === "crashed";
     log(`resume ${r.domain} -> ${r.status}${crashed ? " (crashed 3 times, giving up)" : ""}`, { event: "reset", domain: r.domain, status: r.status });
     if (crashed) await recordEvent(r.id, "capture_failed", { code: "crashed", message: "the run died while capturing this site 3 times", run: runId });
+    // A site that was approved before and now fails leaves public view.
+    if (r.status === "failed" && r.approved_at) await purgeSiteShots(r.id);
   }
   if (opts.retryFailed) {
     const rows = await requeueFailed(MAX_ATTEMPTS);
