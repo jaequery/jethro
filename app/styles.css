@@ -263,15 +263,25 @@ a.chip-outline:hover { background: var(--surface); }
 .frame.is-section { display: flex; flex-direction: column; background: var(--chip); }
 .frame.is-section img { height: auto; margin: auto 0; flex: none; }
 .frame.skel { background: var(--chip); }
-.card:hover .frame { border-color: var(--line-2); }
-.card:hover .frame img { transform: scale(1.015); }
+/* A card with an outbound domain link: .card-main (link or button) stretches over
+   the whole card, and the domain link sits above it. */
+div.card { position: relative; cursor: default; }
+.card-main { display: block; width: 100%; border: 0; padding: 0; background: none; color: inherit; cursor: pointer; text-align: left; border-radius: var(--r-lg); }
+.card-main::after { content: ""; position: absolute; inset: 0; }
+.card:hover:not(:has(.cap-out:hover)) .frame { border-color: var(--line-2); }
+.card:hover:not(:has(.cap-out:hover)) .frame img { transform: scale(1.015); }
 .cap {
   margin-top: 12px; font-size: 15px; color: var(--mute);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .cap b { font-weight: 500; color: var(--ink); }
+.cap-out { position: relative; z-index: 1; text-underline-offset: 3px; }
+.cap-out:hover { color: var(--ink); text-decoration: underline; }
+.cap-out .i.ext { margin-left: 3px; vertical-align: -2px; }
+/* Inside the caption's overflow box an outer ring would be clipped. */
+.cap-out:focus-visible { outline-offset: -2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) {
-  .card:hover .frame img { transform: none; }
+  .card:hover .frame img, .card:hover:not(:has(.cap-out:hover)) .frame img { transform: none; }
 }
 /* ---------- Infinite scroll ---------- */
 /* Empty marker below the grid; holds the retry chip when a batch fails. */

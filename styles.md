@@ -194,6 +194,10 @@ Site, page and section cards share one shape: a **frame** and a **caption**.
   - on a site's own page: **Pattern** · path, or **Section type** · path
 - No logo tile on cards, and never the site's own logo. The source domain is
   shown on every site and page card.
+- **Domain link** (`.cap-out`): on browse site and page cards the domain links
+  out to the real site in a new tab, with the 14px external icon. It stays
+  `--mute` and turns `--ink` and underlined on hover. The rest of the card is
+  one main link or button (`.card-main`) stretched over it.
 - **Hover**: the frame border goes to `--line-2` and the image scales to 1.015
   over 0.2s. `prefers-reduced-motion` turns the scale off.
 
