@@ -100,9 +100,15 @@ for (const target of targets) {
     const why = r.error ?? (r.judgement.capture_ok ? r.judgement.verdict_reasons[0] : `bad capture: ${r.judgement.capture_problem}`);
     console.log(`${r.status.padEnd(8)} ${String(r.judgement?.capture_ok ? r.judgement.quality : "-").padStart(2)}  ${r.site.domain}  ${why ?? ""}`);
     if (r.status === "approved") {
-      const st = await styleSite(r.site);
-      console.log(`         styled ${st.styles ? st.styles.join(", ") : `failed: ${st.error}`}`);
-      tally(st);
+      // A style error leaves the style for `--style-only`; tagging goes on.
+      try {
+        const st = await styleSite(r.site);
+        console.log(`         styled ${st.styles ? st.styles.join(", ") : `failed: ${st.error}`}`);
+        tally(st);
+      } catch (err) {
+        console.error(`         style error, run --style-only later: ${err.message}`);
+        code = 1;
+      }
       const t = await tagSite(r.site);
       console.log(`         tagged ${t.pages.length} pages`);
       tally(t);

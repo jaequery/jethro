@@ -250,9 +250,9 @@ export async function runPipeline(options = {}, { signal } = {}) {
       if (r.status === "rejected" && opts.pruneRejected) await prune(site.id, i, site.domain);
       return;
     }
-    await style(site, i);
-    // Hidden from the library until its subpages and tags are in.
+    // Hidden from the library until its style, subpages and tags are in.
     if (!(await moveSite(site.id, "approved", "capturing"))) return;
+    await style(site, i);
     await finish(site, links, i);
   }
 

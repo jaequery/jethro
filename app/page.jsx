@@ -37,7 +37,7 @@ export default function Page() {
 
       <dialog id="about">
         <h2>About Sqrap</h2>
-        <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme and country.</p>
+        <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme, style and country.</p>
         <p>Every screenshot links to the site it was captured from, and each site's name and logo belong to its owner.</p>
         <p>Own a site listed here? <button className="link" id="removal-open" type="button">Request removal</button></p>
         <p>Building with an AI agent? <a className="link" href="/agents">Use Sqrap with your agent</a>, and read the <a className="link" href="/terms">terms for agents and API use</a>.</p>

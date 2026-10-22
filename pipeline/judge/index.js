@@ -312,6 +312,12 @@ export async function styleSite(siteOrId, { dryRun = false } = {}) {
     ({ styles } = await ask({ system: STYLE_SYSTEM, content, schema: STYLE_SCHEMA, validate: validateStyle, effort: "low", usage }));
   } catch (err) {
     if (err instanceof SchemaError) return failed(err.message, { code: "schema", message: err.message, model: judgeModel() });
+    // A request the API refuses for this site (a 400 or 413 for its images) is
+    // a failed attempt too, so the batch gives up on it; credentials, rate
+    // limits and outages are not the site's fault.
+    if (!dryRun && err.status >= 400 && err.status < 500 && ![401, 402, 403, 408, 429].includes(err.status)) {
+      await run("UPDATE sites SET style_attempts = style_attempts + 1 WHERE id = @id", { id: site.id });
+    }
     if (!dryRun) await recordEvent(site.id, "style_error", { message: String(err.message).slice(0, 500), status: err.status ?? null, model: judgeModel(), usage, cost: costOf(usage) });
     throw err;
   }
@@ -335,7 +341,8 @@ export function unstyledSites(limit, skip = []) {
 // The cron step and `npm run judge -- --style-only`: styles up to `limit`
 // unstyled public sites one at a time, stopping at `signal`. Credentials or
 // quota errors (401/402/403) end the batch; another API error skips the site,
-// which the next batch tries again. Returns the totals.
+// which the next batch tries again (a refused request counts as an attempt).
+// Returns the totals.
 export async function styleNew({ limit = 10, signal, log = () => {} } = {}) {
   const totals = { styled: 0, failed: 0, errors: 0, cost: 0 };
   const seen = [];
