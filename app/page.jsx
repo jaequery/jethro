@@ -40,6 +40,7 @@ export default function Page() {
         <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme and country.</p>
         <p>Every screenshot links to the site it was captured from, and each site's name and logo belong to its owner.</p>
         <p>Own a site listed here? <button className="link" id="removal-open" type="button">Request removal</button></p>
+        <p>Using Sqrap from code or an AI agent? Read the <a className="link" href="/terms">terms for agents and API use</a>.</p>
         <form method="dialog"><button className="btn-primary">Got it</button></form>
       </dialog>
 

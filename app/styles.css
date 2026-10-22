@@ -290,6 +290,19 @@ div.card { position: relative; cursor: default; }
 /* Empty marker below the grid; holds the retry chip when a batch fails. */
 .sentinel { display: flex; justify-content: center; margin: 36px 0 80px; min-height: 1px; }
 
+/* ---------- Document pages (/terms) ---------- */
+.doc { max-width: 680px; margin: 40px auto 0; color: var(--ink-2); font-size: 17px; line-height: 1.6; }
+.doc h1 { margin: 0; color: var(--ink); font-size: 48px; font-weight: 500; letter-spacing: var(--track-display); line-height: 1.1; }
+.doc h2 { margin: 40px 0 10px; color: var(--ink); font-size: 24px; font-weight: 500; letter-spacing: var(--track-display); line-height: 1.2; }
+.doc p { margin: 0 0 12px; }
+.doc .doc-lede { margin-top: 16px; color: var(--mute); }
+.doc b { font-weight: 500; color: var(--ink); }
+.doc a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.doc code { font-size: 15px; background: var(--chip); border-radius: var(--r-sm); padding: 1px 6px; }
+@media (max-width: 640px) {
+  .doc h1 { font-size: 36px; }
+}
+
 /* ---------- Site page ---------- */
 .back { display: inline-flex; align-items: center; gap: 6px; color: var(--mute); font-size: 14.5px; border: 0; background: none; cursor: pointer; padding: 0; }
 .back:hover { color: var(--ink); }

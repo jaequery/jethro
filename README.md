@@ -396,6 +396,28 @@ domain is in the library. In the admin, **Approve removal** deletes the site's
 rows and images and keeps blocking the domain; **Dismiss** lets it back into
 the library and the pipeline. A new request for a dismissed domain reopens it.
 
+### Purging cached images
+
+Public images are served with a year-long cache, tagged `site-<siteId>`
+(`Vercel-Cache-Tag`) and marked `X-Robots-Tag: noai, noimageai`. Whenever a
+site leaves public view (a removal request, a judge rejection or failure of a
+site that was approved before, an admin rejection, an approved removal or an
+admin delete), `purgeSiteShots` in `lib/shots.js` deletes that tag from
+Vercel's CDN right after the status is written and before the files go. Inside
+a Vercel function it uses `@vercel/functions`; elsewhere (local admin,
+`npm run judge`, a local pipeline) it calls Vercel's REST API, which needs
+`VERCEL_PURGE_TOKEN` (an access token with access to the project) and
+`VERCEL_PROJECT_ID` (plus `VERCEL_TEAM_ID` for a team project; both are in
+`.vercel/project.json` as `projectId` and `orgId`). Without them, or when the
+purge fails, it records the site in `pending_purge`, and the next cron run
+purges it from inside Vercel before its batch.
+
+## Terms for agents and API use
+
+`/terms` (linked from the About dialog) sets the rules for scripts, the API and
+AI agents: credit and link the source domain, no training on the images, keys
+can be revoked, takedown through the removal flow.
+
 ## Accounts
 
 Visitors can sign up and sign in with an email and password, or with Google;
@@ -436,7 +458,7 @@ account (saved collections).
 - `app/styles.css`: design tokens and components
 - `styles.md`: the style guide those tokens come from
 - `lib/db.js`: the Postgres pool and query helpers (server only)
-- `lib/shots.js`: reading, writing and deleting captured images (Vercel Blob, or local disk without a token)
+- `lib/shots.js`: reading, writing and deleting captured images (Vercel Blob, or local disk without a token), and purging them from the CDN cache
 - `lib/queries.js`: the public browse queries (filters, keyset pagination, public-site rule) behind the API (server only)
 - `lib/api.js`: request parsing and JSON responses shared by the route handlers
 - `app/api/**/route.js`, `app/shots/[...path]/route.js`: the browse API and the image server
@@ -455,6 +477,7 @@ account (saved collections).
 - `pipeline/run.js`: the orchestrator (claims, resume, AI budget, logging); `scripts/pipeline.js` and `scripts/pipeline-status.js` are its CLIs
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
+- `app/terms/page.jsx`: the terms for agents and API use
 - `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
 - `lib/sqrap.js`: hash routing, search and filters, fetching from the API, infinite scroll, rendering and the lightbox
