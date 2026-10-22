@@ -1,5 +1,6 @@
 import { getDomain } from "tldts";
-import { addOptout, recordEvent } from "../../../lib/db";
+import { addOptout, getSiteByDomain, recordEvent } from "../../../lib/db";
+import { purgeSiteShots } from "../../../lib/shots";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,9 @@ export async function POST(request) {
 
   try {
     await addOptout({ domain, email, reason });
+    // Hidden from now on; drop its images from the CDN cache too.
+    const site = await getSiteByDomain(domain);
+    if (site) await purgeSiteShots(site.id);
     await recordEvent(null, "removal_requested", { domain });
   } catch (err) {
     console.error(err);
