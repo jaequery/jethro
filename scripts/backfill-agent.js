@@ -5,11 +5,12 @@
 // A row with neither usable is marked 'recapture' and gets no image.
 //
 // Only rows without an agent_status are touched, so it is safe to stop and run
-// again. Usage: npm run agent:backfill [-- --batch 25] [--limit N]
+// again. 'recapture' rows are not queued for a new capture; that stays manual.
+// Usage: npm run agent:backfill [-- --batch 25] [--limit N]
 import "./env.js";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
-import { all, setAgentImages, value } from "../lib/db.js";
+import { all, get, setAgentImages, tx, value } from "../lib/db.js";
 import { publicSites } from "../lib/queries.js";
 import { readShot, removeShots } from "../lib/shots.js";
 import { AGENT_IMAGE } from "../lib/taxonomy.js";
@@ -28,22 +29,40 @@ async function source(rel, width) {
   return w >= width ? image : null;
 }
 
+// Screen tiles carry the screen id in their name: a capture running meanwhile
+// writes "<page>-<platform>-agent.webp" for its new screen, and must not have
+// it overwritten with the old screen's pixels.
 async function backfillScreen(sc) {
   const width = AGENT_IMAGE.width[sc.platform];
   const base = (sc.full_path || sc.lg_path || "").replace(/-(full|lg)\.webp$/, "");
   const full = await source(sc.full_path, width);
   const image = full ?? (await source(sc.lg_path, width));
-  const tiles = image && base ? await writeAgentTiles(await agentRaw(image, sc.platform), base) : [];
-  const status = !tiles.length ? "recapture" : full ? "full" : "top_only";
-  await removeShots(await setAgentImages({ siteId: sc.site_id, screenId: sc.id, status, tiles }));
-  return status;
+  const tiles = image && base ? await writeAgentTiles(await agentRaw(image, sc.platform), `${base}-${sc.id.slice(0, 8)}`) : [];
+  return save("screens", sc, !tiles.length ? "recapture" : full ? "full" : "top_only", tiles);
 }
 
 async function backfillSection(x) {
   const image = await source(x.img_path, AGENT_IMAGE.width[x.platform]);
   const tiles = image ? await writeAgentTiles(await agentRaw(image, x.platform), x.img_path.replace(/\.webp$/, "")) : [];
-  const status = tiles.length ? "full" : "recapture";
-  await removeShots(await setAgentImages({ siteId: x.site_id, sectionId: x.id, status, tiles }));
+  return save("sections", x, tiles.length ? "full" : "recapture", tiles);
+}
+
+// Records the tiles, unless the row was deleted (recaptured) or its site left
+// public view while they were being made: then they are removed again. The row
+// and its site stay locked until the commit, so a status change that comes
+// after it also purges these files.
+async function save(kind, row, status, tiles) {
+  const stale = await tx(async () => {
+    const params = { id: row.id };
+    const live = await get(`SELECT 1 FROM ${KINDS[kind].from} WHERE ${KINDS[kind].row}.id = @id AND ${publicSites(params)} FOR UPDATE`, params);
+    if (!live) return null;
+    return setAgentImages({ siteId: row.site_id, [kind === "screens" ? "screenId" : "sectionId"]: row.id, status, tiles });
+  });
+  if (!stale) {
+    await removeShots(tiles.map((t) => t.path));
+    return "gone";
+  }
+  await removeShots(stale);
   return status;
 }
 
@@ -85,7 +104,7 @@ let errors = 0;
 for (const kind of Object.keys(KINDS)) {
   const todo = await countPending(kind);
   console.log(`${kind}: ${todo} to backfill`);
-  const counts = { full: 0, top_only: 0, recapture: 0, failed: 0 };
+  const counts = { full: 0, top_only: 0, recapture: 0, gone: 0, failed: 0 };
   const failed = new Set();
   let done = 0;
   while (left > 0) {
