@@ -64,6 +64,12 @@ svg.i { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none;
   width: 32px; height: 32px; border-radius: var(--r-pill);
   background: var(--chip); color: var(--ink); font-size: 15px; font-weight: 500;
 }
+button.avatar { border: 0; padding: 0; cursor: pointer; }
+button.avatar:hover, button.avatar[aria-expanded="true"] { background: var(--surface-2); }
+/* The account menu opens under the avatar, right-aligned. */
+.menu.account-menu { left: auto; right: 0; min-width: 220px; }
+.account-menu[hidden] { display: none; }
+.account-menu .menu-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .search-toggle { display: none; }
 
 /* ---------- Chip and segmented control ---------- */
@@ -184,12 +190,12 @@ a.chip-outline:hover { background: var(--surface); }
   box-shadow: var(--shadow-pop);
   display: flex; flex-direction: column;
 }
-.menu button {
+.menu button, .menu a {
   display: flex; justify-content: space-between; align-items: center; gap: 16px;
   height: 34px; padding: 0 10px; border: 0; border-radius: var(--r-sm);
   background: none; cursor: pointer; font-size: 14.5px; color: var(--ink); text-align: left;
 }
-.menu button:hover, .menu button:focus-visible { background: var(--surface); outline: 0; }
+.menu button:hover, .menu button:focus-visible, .menu a:hover, .menu a:focus-visible { background: var(--surface); outline: 0; }
 .menu button[aria-checked="true"] { background: var(--surface-2); }
 .menu small { color: var(--faint); font-size: 12.5px; }
 .menu .lbl { display: inline-flex; align-items: center; gap: 8px; }
@@ -375,6 +381,22 @@ dialog .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .google-btn { margin: 0 0 16px; height: 44px; padding: 0 20px; }
 .google-btn[hidden] { display: none; }
 .auth-switch { margin: 16px 0 0; font-size: 14.5px; }
+
+/* API keys dialog: the new key once, then the list of keys with a revoke chip each. */
+dialog code { font: 13.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; }
+dialog p code { padding: 1px 6px; border-radius: var(--r-sm); background: var(--chip); }
+.key-new { margin: 0 0 16px; padding: 16px; border: 1px solid var(--line-2); border-radius: var(--r-lg); }
+.key-new[hidden] { display: none; }
+.key-reveal { display: flex; align-items: center; gap: 8px; }
+.key-reveal code { flex: 1; min-width: 0; padding: 10px 14px; border-radius: var(--r-lg); background: var(--chip); overflow-wrap: anywhere; user-select: all; }
+.key-list { list-style: none; margin: 0 0 16px; padding: 0; }
+.key-list:empty { display: none; }
+.key-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.key-list li:last-child { border-bottom: 1px solid var(--line); }
+.key-list .key-info { min-width: 0; }
+.key-list .key-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key-list .key-sub { color: var(--mute); font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key-list .chip { flex: none; }
 
 /* ---------- Forms (removal dialog, admin) ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px; font-size: 14.5px; color: var(--ink-2); }

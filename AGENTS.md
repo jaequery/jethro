@@ -9,7 +9,8 @@ is the first thing a Fredrin Worker reads.
 Sqrap is a public design-inspiration library, in the spirit of Mobbin but with
 its own name, branding and content. Visitors browse apps and screens, search,
 and filter by platform, UI pattern and industry. Accounts (email/password and Google, see README "Accounts") exist, but
-browsing stays open and there are no saved collections yet.
+browsing stays open and there are no saved collections yet. Signed-in users can
+create API keys for the agent API (README "Agent API").
 
 ## Commands
 
@@ -34,6 +35,7 @@ browsing stays open and there are no saved collections yet.
 - Playwright closes its browser on the first Ctrl-C by default, which kills in-flight captures; a CLI that handles SIGINT/SIGTERM itself (like `scripts/pipeline.js`) must call `setOwnSignals(true)` from `pipeline/browser.js` before launching and `closeBrowser()` before exiting.
 - To tell a loopback caller from a remote one (admin guard, rate limits), read the `x-sqrap-peer` header that `next.config.mjs` stamps from the socket; never trust `X-Forwarded-For`, because Next only fills it when the client did not send one.
 - Accounts are hand-rolled in `lib/auth.js` and `app/api/auth/*` (scrypt, hashed server-side sessions, Google via code + PKCE). Auth routes must require a JSON content type for mutations and must not echo whether an email exists on sign-in. `#/signin` and `#/signup` open the auth dialog over the current view.
+- The agent API (`app/api/v1`) checks the bearer key and charges the quota through `agentResponse` in `lib/agent-api.js`; a new endpoint or MCP tool must go through it (or `chargeCall` in `lib/agent-quota.js`) so it is counted, must never hand out `full`/`lg` images, and must be added to the OpenAPI spec in `lib/openapi.js`. No per-call Postgres writes: counters live in Redis.
 - All view state lives in the URL hash (`#/apps`, `#/screens`, `#/app/<id>` with query filters). Unknown routes and values fall back to the browse view.
 
 <!-- BEGIN:nextjs-agent-rules -->
