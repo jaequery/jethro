@@ -187,8 +187,11 @@ Each page is shot at desktop (1440) and mobile (390) widths. Images land in
 the private Vercel Blob store under `shots/<siteId>/` (or `data/shots/<siteId>/`
 when `BLOB_READ_WRITE_TOKEN` is unset) as WebP: `<page>-<platform>-full.webp` (the whole page,
 capped at 12000 css px), `-lg` and `-sm` top-of-page thumbnails, and
-`sections/<sectionId>{,-sm}.webp` crops. Rows go into `pages`, `screens` and
-`sections`. Opted-out domains and URLs disallowed by robots.txt are skipped and
+`sections/<sectionId>{,-sm}.webp` crops. Every screen and section also gets
+agent images, the only pictures the agent API hands out: `-agent.webp`,
+`-agent-2.webp`, … tiles at most 1536 tall, 1024 wide on desktop and 585 on
+mobile, cut top-down. Rows go into `pages`, `screens`, `sections` and
+`agent_images`. Opted-out domains and URLs disallowed by robots.txt are skipped and
 logged in `events`.
 
 ## Judge and tag
@@ -348,9 +351,17 @@ come from its dominant color and palette (`lib/color.js`); capture sets them,
 and `npm run color:backfill` fills screens captured before they existed.
 `country` is an ISO 3166-1 alpha-2 code from the judge.
 
+Sites captured before agent images existed get them from their stored images
+with `npm run agent:backfill` (public sites only; re-run it after approving
+older captures). A screen whose full shot is too narrow is built from its `-lg`
+thumbnail and marked `agent_status = 'top_only'`; a row with no usable image
+is marked `'recapture'` and gets none. It only touches rows without an
+`agent_status`, so it can be stopped and run again.
+
 ```sh
-npm run db:migrate        # adds the search index and color columns
+npm run db:migrate        # adds the search index, color columns and agent_images
 npm run color:backfill    # -- --all recomputes every screen
+npm run agent:backfill    # -- --batch 25 --limit 500
 npm run search:reindex
 ```
 
@@ -471,6 +482,7 @@ account (saved collections).
 - `scripts/discover.js`, `scripts/seed.js`: the discovery CLIs
 - `seeds.example.txt`: a starter list of well-designed sites
 - `data/`: local pipeline logs, and captures when there is no Blob token (git-ignored; `SQRAP_DATA_DIR` moves it)
+- `pipeline/agent-images.js`, `scripts/backfill-agent.js`: agent-sized image tiles, written by capture and backfilled for older captures
 - `scripts/import-sqlite.js`: one-off copy of an old SQLite library and its `data/shots` into Postgres and Blob
 - `pipeline/*.js`: the capture engine (browser, page prep, robots/opt-out checks, sections, subpage links); `scripts/capture.js` is its CLI
 - `pipeline/judge/`: the Claude vision judge and tagger (rubric, image prep, output schema); `scripts/judge.js` is its CLI
