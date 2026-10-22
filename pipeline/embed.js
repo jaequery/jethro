@@ -65,45 +65,88 @@ function save(kind, r, { vector = null, error = null }) {
       created_at = excluded.created_at`, params);
 }
 
+// A gateway answer that blames the input, not the moment.
+const refused = (err) => err.status >= 400 && err.status < 500 && err.status !== 408 && err.status !== 429;
+
 // Embeds `rows` of `kind` (from pendingRows) in gateway calls of EMBED_BATCH.
 // Returns { embedded, failed, cost, failedIds }. With dryRun nothing is written.
+// Only a missing image or one the gateway refuses counts as a failed attempt;
+// a timeout, an abort, a rate limit or a storage error leaves the row for the next run.
 export async function embedRows(kind, rows, { dryRun = false, signal, log = () => {} } = {}) {
   const out = { embedded: 0, failed: 0, cost: 0, failedIds: [] };
-  const fail = async (r, message) => {
+  const skip = (r, message) => {
     out.failed++;
     out.failedIds.push(r.id);
     log(`  ${kind} ${r.id} failed: ${message}`);
+  };
+  const fail = async (r, message) => {
+    skip(r, message);
     if (!dryRun) await save(kind, r, { error: String(message).slice(0, 500) }).catch((err) => log(`  could not record the failure: ${err.message}`));
+  };
+  const embed = async (ready) => {
+    const res = await embedImages(ready.map((x) => x.image), { signal });
+    out.cost += res.cost;
+    if (dryRun) out.embedded += ready.length;
+    else await tx(async () => { for (const [j, { r }] of ready.entries()) out.embedded += await save(kind, r, { vector: res.vectors[j] }); });
   };
   for (let i = 0; i < rows.length; i += EMBED_BATCH) {
     if (signal?.aborted) break;
     const ready = [];
-    for (const r of rows.slice(i, i + EMBED_BATCH)) {
-      const image = await readShot(r.path).catch(() => null);
-      if (image) ready.push({ r, image });
-      else await fail(r, `agent image ${r.path} is missing`);
+    const reads = await Promise.all(rows.slice(i, i + EMBED_BATCH).map(async (r) => {
+      try {
+        return { r, image: await readShot(r.path) };
+      } catch (err) {
+        return { r, error: err };
+      }
+    }));
+    for (const { r, image, error } of reads) {
+      if (error) skip(r, `could not read ${r.path}: ${error.message}`);
+      else if (!image) await fail(r, `agent image ${r.path} is missing`);
+      else ready.push({ r, image });
     }
     if (!ready.length) continue;
-    let res;
     try {
-      res = await embedImages(ready.map((x) => x.image), { signal });
+      await embed(ready);
     } catch (err) {
       // Credentials or quota: the next batch would fail the same way.
       if ([401, 402, 403].includes(err.status) || err instanceof EmbeddingsDisabled) throw err;
-      for (const { r } of ready) await fail(r, err.message);
-      continue;
+      // Out of time: nothing is wrong with these rows.
+      if (signal?.aborted || err.name === "AbortError" || err.name === "TimeoutError") {
+        for (const { r } of ready) skip(r, "timed out");
+        break;
+      }
+      // One bad image fails the whole call: try them one by one, so only it is charged.
+      if (refused(err) && ready.length > 1) {
+        for (const one of ready) {
+          try {
+            await embed([one]);
+          } catch (e) {
+            if (signal?.aborted || e.name === "AbortError" || e.name === "TimeoutError") { skip(one.r, "timed out"); break; }
+            if (refused(e)) await fail(one.r, e.message);
+            else skip(one.r, e.message);
+          }
+        }
+        continue;
+      }
+      if (refused(err)) await fail(ready[0].r, err.message);
+      // An outage or rate limit after the retries: try again next run.
+      else for (const { r } of ready) skip(r, err.message);
     }
-    out.cost += res.cost;
-    if (!dryRun) await tx(async () => { for (const [j, { r }] of ready.entries()) await save(kind, r, { vector: res.vectors[j] }); });
-    out.embedded += ready.length;
   }
   return out;
+}
+
+// Embeddings of sites that are no longer public: purgeSiteShots deletes them,
+// but a batch that was running meanwhile, or a failed delete, can leave some.
+export function sweepStale() {
+  const params = {};
+  return run(`DELETE FROM embeddings e WHERE NOT EXISTS (SELECT 1 FROM sites s WHERE s.id = e.site_id AND ${publicSites(params)})`, params);
 }
 
 // The cron step: up to `limit` rows, sections before home screens, newest
 // approvals first, stopping at `signal`. Returns the totals.
 export async function embedNew({ limit = 64, signal, log } = {}) {
-  const totals = { embedded: 0, failed: 0, cost: 0 };
+  const totals = { embedded: 0, failed: 0, cost: 0, swept: await sweepStale() };
   const failed = new Set();
   let left = limit;
   for (const kind of EMBED_KINDS) {
