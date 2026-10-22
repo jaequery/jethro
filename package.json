@@ -16,7 +16,8 @@
     "search:reindex": "node scripts/search-reindex.js",
     "color:backfill": "node scripts/color-backfill.js",
     "import:sqlite": "node scripts/import-sqlite.js",
-    "agent:backfill": "node scripts/backfill-agent.js"
+    "agent:backfill": "node scripts/backfill-agent.js",
+    "embed:backfill": "node scripts/backfill-embeddings.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

@@ -14,7 +14,7 @@ Browse it at ${o}/. AI agents and scripts read it with an API key (create one at
 ## For agents
 
 - [Use Sqrap with your agent](${o}/agents): setup for Claude Code, Cursor and VS Code, and a Claude Code skill
-- [MCP server](${o}/mcp): Streamable HTTP, \`Authorization: Bearer <key>\`; tools search_screens, search_sections, get_site, list_filters
+- [MCP server](${o}/mcp): Streamable HTTP, \`Authorization: Bearer <key>\`; tools search_screens, search_sections, get_site, find_similar, list_filters
 - [OpenAPI spec](${o}/api/v1/openapi.json): the REST API at ${o}/api/v1
 - [Terms for agents and API use](${o}/terms): credit the source site, do not train on the images, keys can be revoked
 `;
