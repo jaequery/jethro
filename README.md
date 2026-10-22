@@ -524,9 +524,46 @@ SELECT week, metric, name, value FROM agent_usage_weekly ORDER BY week DESC, met
 
 **Per-IP backstop.** Keys bound each account, not each caller, so turn on a
 Vercel WAF rate-limit rule as well (Project → Firewall → Configure → New rule):
-If *Request Path* starts with `/api/v1/`, then *Rate Limit*, fixed window,
+If *Request Path* starts with `/api/v1/` or equals `/mcp`, then *Rate Limit*, fixed window,
 60 seconds, 120 requests, keyed on *IP*, action *Too Many Requests (429)*. The
 owner turns it on in the dashboard; nothing in the code depends on it.
+
+## MCP server
+
+`/mcp` (`app/mcp/route.js`, tools in `lib/agent-mcp.js`) is a remote MCP server
+for coding agents: Streamable HTTP, stateless, built on `mcp-handler` 2.x and
+`@modelcontextprotocol/server` 2.x (zod 4). It takes the same API key as the
+Agent API (`Authorization: Bearer <key>`; none or an unknown one answers 401
+before any MCP handling) and calls the same reads directly, not over HTTP.
+
+| Tool | Does |
+| --- | --- |
+| `search_screens` | Whole pages by `q` and the taxonomy filters (`platform`, `pattern`, `section`, `industry`, `color`, `theme`, `country`) |
+| `search_sections` | Single sections by `type`, `q` and the same filters |
+| `get_site` | One site by id or domain: its pages with theme, palette and image URLs, and each page's sections in order |
+| `list_filters` | Every filter value with its count |
+
+Each tool call is charged to the key's daily quota and, when it succeeds,
+counted as `mcp/<tool>` in the weekly usage; `initialize` and `tools/list`
+cost nothing. Results are compact JSON (source `domain` and `sourceUrl`, site
+name, pattern or section type, palette, theme, image URLs; never `full`/`lg`
+shots), 12 per page by default and at most 24. With `include_images: true`
+up to four of the images are also inlined as WebP, 512px wide and at most
+1024px tall. Tool descriptions and the server instructions ask the agent to
+credit the source site and point at `/terms`.
+
+```sh
+claude mcp add --transport http sqrap https://sqrap.com/mcp --header "Authorization: Bearer $SQRAP_KEY"
+npx @modelcontextprotocol/inspector --cli https://sqrap.com/mcp --transport http \
+  --header "Authorization: Bearer $SQRAP_KEY" --method tools/list
+```
+
+Around it: `/agents` (`app/agents/`) is the setup page for Claude Code, Cursor
+and VS Code, linked from About and the API keys dialog; `skills/sqrap/SKILL.md`
+is a Claude Code skill saying when and how to use Sqrap; `/llms.txt`
+(`app/llms.txt/route.js`) describes Sqrap for LLMs; `server.json` is the MCP
+Registry entry (`com.sqrap/mcp`), published by the owner with `mcp-publisher`
+after verifying the sqrap.com domain.
 
 ## Files
 
@@ -557,6 +594,7 @@ owner turns it on in the dashboard; nothing in the code depends on it.
 - `app/admin/`, `app/api/admin/**`: the local admin; `lib/admin.js` (loopback + env guard), `lib/admin-data.js` (its queries and actions), `lib/jobs.js` (in-process job queue)
 - `app/api/removal/route.js`: public removal requests
 - `app/terms/page.jsx`: the terms for agents and API use
+- `app/mcp/route.js`, `lib/agent-mcp.js`, `app/agents/`, `skills/sqrap/`, `app/llms.txt/route.js`, `server.json`: the MCP server, its setup page, the Claude Code skill, llms.txt and the MCP Registry entry (see MCP server)
 - `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts) and API keys
 - `app/api/v1/**`, `lib/agent-api.js`, `lib/agent-quota.js`, `lib/openapi.js`, `app/api/account/keys/**`: the agent API, its quota and usage counters, its OpenAPI spec and key management (see Agent API)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit

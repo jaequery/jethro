@@ -248,6 +248,12 @@ right ("Confirm revoke" on the first press). A new key appears once in a box
 with a `--line-2` hairline and `--r-lg`, in monospace on `--chip`, with a `.chip`
 "Copy" beside it.
 
+**Document pages** (`/terms`, `/agents`) use `.doc`: a 680px column, a 48px
+display headline, 24px section titles and 17px/500 `h3`s. A copyable snippet
+(`.code-block`) is a muted label with a small outlined `.chip` "Copy" on the
+right, over monospace on `--chip` with `--r-lg` that scrolls sideways inside
+its box rather than widening the page.
+
 ### Empty and error states
 Centred: a display title (28px/500, `--track-display`), a muted line, and a
 `.chip` button with an icon ("Clear filters", "Try again"). "No sites yet" has

@@ -40,7 +40,7 @@ export default function Page() {
         <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme and country.</p>
         <p>Every screenshot links to the site it was captured from, and each site's name and logo belong to its owner.</p>
         <p>Own a site listed here? <button className="link" id="removal-open" type="button">Request removal</button></p>
-        <p>Using Sqrap from code or an AI agent? Read the <a className="link" href="/terms">terms for agents and API use</a>.</p>
+        <p>Building with an AI agent? <a className="link" href="/agents">Use Sqrap with your agent</a>, and read the <a className="link" href="/terms">terms for agents and API use</a>.</p>
         <form method="dialog"><button className="btn-primary">Got it</button></form>
       </dialog>
 
@@ -90,7 +90,7 @@ export default function Page() {
 
       <dialog id="keys" aria-labelledby="keys-title">
         <h2 id="keys-title">API keys</h2>
-        <p>Keys let your scripts and AI agents read Sqrap through the <a className="link" href="/api/v1/openapi.json" target="_blank" rel="noopener">API</a>. Send one as <code>Authorization: Bearer &lt;key&gt;</code>, and follow the <a className="link" href="/terms">terms for agents</a>.</p>
+        <p>Keys let your scripts and AI agents read Sqrap through the <a className="link" href="/api/v1/openapi.json" target="_blank" rel="noopener">API</a> and the MCP server. Send one as <code>Authorization: Bearer &lt;key&gt;</code>, see <a className="link" href="/agents">setup for Claude Code, Cursor and VS Code</a>, and follow the <a className="link" href="/terms">terms for agents</a>.</p>
         <div className="key-new" id="keys-new" hidden>
           <p>Copy your new key now. Sqrap keeps only a fingerprint of it, so it is not shown again.</p>
           <div className="key-reveal">

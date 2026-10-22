@@ -1,0 +1,34 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.sqrap/mcp",
+  "title": "Sqrap",
+  "description": "Real-website design references: search pages and sections with palettes, themes and screenshots.",
+  "version": "1.0.0",
+  "websiteUrl": "https://sqrap.com/agents",
+  "repository": {
+    "url": "https://github.com/jaequery/sqrap",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://sqrap.com/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Bearer <your Sqrap API key>, created at https://sqrap.com/#/keys",
+          "value": "Bearer {sqrap_api_key}",
+          "isRequired": true,
+          "isSecret": true,
+          "variables": {
+            "sqrap_api_key": {
+              "description": "Your Sqrap API key",
+              "isRequired": true,
+              "isSecret": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
