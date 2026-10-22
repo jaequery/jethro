@@ -140,6 +140,7 @@ export async function judgeSite(siteOrId, { dryRun = false } = {}) {
   if (!screens.desktop && !screens.mobile) {
     if (!dryRun) {
       await upsertSite({ domain: site.domain, status: "failed", lastError: "no_capture" });
+      if (site.approved_at) await purgeSiteShots(site.id);
       await recordEvent(site.id, "judge_failed", { code: "no_capture" });
     }
     return { site, status: "failed", error: "no_capture", usage, cost: 0 };

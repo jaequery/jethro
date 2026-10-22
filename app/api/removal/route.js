@@ -68,13 +68,18 @@ export async function POST(request) {
 
   try {
     await addOptout({ domain, email, reason });
-    // Hidden from now on; drop its images from the CDN cache too.
-    const site = await getSiteByDomain(domain);
-    if (site) await purgeSiteShots(site.id);
     await recordEvent(null, "removal_requested", { domain });
   } catch (err) {
     console.error(err);
     return fail(500, "Could not record the request. Try again later.");
+  }
+  // Hidden from now on; drop its images from the CDN cache too. The request is
+  // recorded either way, so a failure here is only logged.
+  try {
+    const site = await getSiteByDomain(domain);
+    if (site) await purgeSiteShots(site.id);
+  } catch (err) {
+    console.error(`removal ${domain}: purge lookup failed: ${err.message}`);
   }
   return Response.json({ data: { domain, message: `Thanks. ${domain} is hidden from Sqrap while we review your request.` } }, { headers: { "Cache-Control": "no-store" } });
 }
