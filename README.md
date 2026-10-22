@@ -485,8 +485,11 @@ carries the source `domain` and `sourceUrl`; screens add `palette`, `dominant`,
 the home page's first screens. `topOfPageOnly: true` marks images that show only
 the top of the page. Images are only the agent tiles and the small `sm`
 thumbnails, never the full-page or large shots. Successful reads send
-`Cache-Control: s-maxage=300`; Vercel's CDN never caches a request that carries
-`Authorization`, so every call reaches the key check and the quota.
+`Cache-Control: s-maxage=300` with `Vary: Authorization`. Vercel's CDN never
+caches a request that carries `Authorization`, so every call through it reaches
+the key check and the quota; a caller's own shared proxy may still replay a
+key's response for a few minutes, even after the key is revoked.
+`/api/v1/sites/blog.example.com` never falls back to `example.com`.
 
 **Keys.** A signed-in user creates up to 3 keys under the avatar menu → API keys
 (`#/keys`). A key (`sqrap_…`) is shown once; Postgres keeps only its SHA-256 in
@@ -505,12 +508,14 @@ UTC). Every answer carries `X-RateLimit-Limit` and `X-RateLimit-Remaining`. The
 counters live in Upstash Redis: add it from the Vercel Marketplace, which sets
 `KV_REST_API_URL`/`KV_REST_API_TOKEN` (or set `UPSTASH_REDIS_REST_URL`/
 `UPSTASH_REDIS_REST_TOKEN`). Without them (local dev) the counters are in memory,
-per server instance, with a warning logged once. No call writes to Postgres. If
+per server instance, with a warning logged once, and on Vercel the cron
+snapshot is skipped rather than overwrite the table with zeros. No call writes to Postgres. If
 Redis cannot be reached, calls are let through and the error is logged.
 
-**Usage.** Each ISO week Redis keeps the set of keys that made a successful call
+**Usage.** Each ISO week Redis keeps the set of keys that made a successful (200) call
 (counted exactly with `SCARD`) and a counter per endpoint or MCP tool
-(`v1/screens`, `v1/site`, …). Every cron run copies the running and the previous
+(`v1/screens`, `v1/site`, …); an MCP tool calls `chargeCall` before and
+`recordUsage` after, like `agentResponse`. Every cron run copies the running and the previous
 week into `agent_usage_weekly` (`metric` `active_keys` or `calls`):
 
 ```sql
