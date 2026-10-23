@@ -24,6 +24,7 @@ export default function Page() {
             <div className="suggest" id="suggest" role="listbox" aria-label="Suggestions" hidden></div>
           </div>
           <button className="top-link" id="about-btn" type="button">About</button>
+          <a className="top-link" id="liked-link" href="#/liked">Liked</a>
           <div className="account" id="account"></div>
         </div>
       </header>

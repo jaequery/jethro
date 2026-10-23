@@ -490,8 +490,28 @@ browsing never requires an account. It is hand-rolled, with no auth library:
   `lib/auth.js` holds the server logic; the dialog lives in `app/page.jsx` and
   `lib/sqrap.js` (`#/signin`, `#/signup`).
 
-Not built yet: email verification, password reset and saved collections. The
-one thing an account unlocks today is API keys (see Agent API).
+### Saved designs (Liked)
+
+Signed in, a visitor can save ("like") a whole site or one page screenshot (a
+page on one platform), Pinterest-style, and find them all at `#/liked`.
+
+- A heart button sits on every site and page card (shown on hover, always once
+  saved and on touch screens), a "Save" chip in a site's header and in the
+  lightbox for pages. Pressing one signed out opens `#/signin` and the save is
+  made once signed in (email/password; a Google round trip drops it).
+- `#/liked` (the "Liked" top-bar link and account-menu item) lists the saved
+  sites, then the saved pages, newest save first. Un-saving there keeps the card
+  until the next visit, so a press can be undone.
+- Table `likes` (migration `011`): one row per user and `target`, which is
+  `site:<site id>` or `page:<page id>:<platform>`. A saved page points at the
+  page and platform, not at a screen row, because pages keep their id across
+  re-captures and screens do not. Sections are not saveable for that reason.
+  Saves of sites that stop being public are hidden, not deleted.
+- Routes: `GET /api/likes` (the account's targets), `POST /api/likes`
+  (`{ siteId, pageId?, platform?, liked }`, JSON only) and `GET /api/likes/items`
+  (the saved sites and pages for the Liked view). At most 500 saves per account.
+
+Not built yet: email verification, password reset and named collections (boards).
 
 ## Agent API
 
@@ -687,6 +707,7 @@ after verifying the sqrap.com domain.
 - `app/terms/page.jsx`: the terms for agents and API use
 - `app/mcp/route.js`, `lib/agent-mcp.js`, `app/agents/`, `skills/sqrap/`, `app/llms.txt/route.js`, `server.json`: the MCP server, its setup page, the Claude Code skill, llms.txt and the MCP Registry entry (see MCP server)
 - `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts) and API keys
+- `app/api/likes/**`: saved designs and the Liked view's data (see Saved designs)
 - `lib/embeddings.js`, `pipeline/embed.js`, `scripts/backfill-embeddings.js`: image embeddings and find_similar (see Similarity search)
 - `app/api/v1/**`, `lib/agent-api.js`, `lib/agent-quota.js`, `lib/openapi.js`, `app/api/account/keys/**`: the agent API, its quota and usage counters, its OpenAPI spec and key management (see Agent API)
 - `next.config.mjs`: stamps each request with its real socket address for the admin guard and the rate limit
@@ -695,8 +716,9 @@ after verifying the sqrap.com domain.
 ## URLs
 
 State lives in the hash, so every view can be shared:
-`#/apps` (sites), `#/screens`, `#/sections`, `#/app/<id>` (one site), `#/keys`
-(the API keys dialog, after signing in), plus
+`#/apps` (sites), `#/screens`, `#/sections`, `#/app/<id>` (one site), `#/liked`
+(the signed-in account's saved sites and pages), `#/keys` (the API keys dialog,
+after signing in), plus
 `?q=&platform=&pattern=&section=&industry=&color=&theme=&style=&country=`. `platform`
 is `desktop` or `mobile`, `color` a color bucket, `theme` `light` or `dark`,
 `style` a style id such as `minimal` and `country` a two-letter code such as `JP`.

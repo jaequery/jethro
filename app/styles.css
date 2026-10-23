@@ -57,7 +57,7 @@ svg.i { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none;
 .wordmark { font-size: 24px; font-weight: 600; letter-spacing: var(--track-display); line-height: 1; }
 .topbar-end { display: flex; align-items: center; gap: 40px; min-width: 0; }
 .top-link { border: 0; background: none; padding: 0; cursor: pointer; color: var(--mute); font-size: 17px; white-space: nowrap; }
-.top-link:hover { color: var(--ink); }
+.top-link:hover, .top-link[aria-current="page"] { color: var(--ink); }
 .account { display: flex; align-items: center; gap: 12px; }
 .avatar {
   display: inline-flex; align-items: center; justify-content: center;
@@ -83,7 +83,7 @@ button.chip { cursor: pointer; }
 button.chip:hover { background: var(--surface-2); }
 /* Outlined variant: a link chip such as "Visit domain ↗". */
 .chip-outline { background: none; border: 1px solid var(--line-2); }
-a.chip-outline:hover { background: var(--surface); }
+a.chip-outline:hover, button.chip-outline:hover { background: var(--surface); }
 .seg { display: inline-flex; gap: 2px; padding: 4px; border-radius: var(--r-pill); background: var(--chip); }
 .seg button {
   height: 30px; padding: 0 14px; border: 0; border-radius: var(--r-pill);
@@ -289,6 +289,18 @@ div.card { position: relative; cursor: default; }
 .cap-out .i.ext { margin-left: 3px; vertical-align: -2px; }
 /* Inside the caption's overflow box an outer ring would be clipped. */
 .cap-out:focus-visible { outline-offset: -2px; border-radius: 4px; }
+/* Save (heart) over a card's frame, top right: shown on hover or focus, always
+   once saved and on touch screens. Saved, the heart fills with --accent. */
+.like {
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--bg); color: var(--ink); cursor: pointer;
+  opacity: 0; transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+.card:hover .like, .card:focus-within .like, .like[aria-pressed="true"] { opacity: 1; }
+.like:hover { background: var(--surface); }
+@media (hover: none) { .like { opacity: 1; } }
+[data-like][aria-pressed="true"] svg.i { color: var(--accent); fill: currentColor; }
 @media (prefers-reduced-motion: reduce) {
   .card:hover .frame img { transform: none; }
 }
@@ -356,6 +368,9 @@ div.card { position: relative; cursor: default; }
 .lb-link { margin-left: auto; min-width: 0; background: var(--chip-dark); color: #fff; }
 .lb-link span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .lb-link:hover { background: var(--chip-dark-2); }
+.lightbox .lb-like { margin-left: auto; flex: none; background: var(--chip-dark); color: #fff; }
+.lightbox .lb-like:hover { background: var(--chip-dark-2); }
+.lb-like + .lb-link { margin-left: 0; }
 .lb-btn { flex: none; width: 40px; height: 40px; border-radius: var(--r-pill); border: 0; background: var(--chip-dark); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .lb-btn:hover { background: var(--chip-dark-2); }
 .lb-btn:disabled { opacity: 0.35; cursor: default; background: var(--chip-dark); }
