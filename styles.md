@@ -65,7 +65,7 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Tagline, caption | 14.5px | 400 | `--mute` | |
 | Site name (site page) | 48px | 500 | `--ink` | `--track-display`; 36px at ≤640px |
 | Group title ("Sections"), dialog title | 28px | 500 | `--ink` | `--track-display`; group title 24px at ≤640px |
-| Menu item | 14.5px | 400 | `--ink` | Count at 12.5px in `--faint` |
+| Menu item | 14.5px | 400 | `--ink` | 500 when selected; count at 12.5px in `--faint`, tabular numerals |
 
 ## 3. Spacing and layout
 
@@ -187,8 +187,19 @@ more — try again" in the sentinel. Once the list ends the sentinel is removed.
 There is no page number in the URL.
 
 ### Menus
-The **menu** is a white popover with a `--line` border, `--r-lg` and
-`--shadow-pop`, 6px below its chip. Items are 34px tall with a count on the right.
+The **menu** is a white popover with a `--line` border, `--r-lg`,
+`--shadow-pop` and 8px padding, 6px below its chip.
+- **Items** are 38px tall (44px in the phone bottom sheet), `--r-sm`, padded
+  0 12px 0 10px, with at least 24px between the label and the count. Counts are
+  12.5px `--faint` with tabular numerals, right-aligned.
+- **Icon slot** (`.ico`): filter menus give every item a fixed 20px slot with
+  the emoji (16px), flag or color swatch centred in it, then 10px to the label,
+  so all labels start at the same x. The "Any …" row has an empty slot and is
+  followed by a 1px `--line` hairline (`.menu-sep`). Group headings
+  (`.menu-group`, e.g. regions in the country menu) indent to the label column.
+- **States**: hover and keyboard focus fill `--surface`, and focus adds the
+  `--accent` ring inset. The selected item has no fill: its label turns 500 and
+  a 16px `--accent` check replaces its count.
 
 ### Cards (`.card`)
 Site, page and section cards share one shape: a **frame** and a **caption**.
