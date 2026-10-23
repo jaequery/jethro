@@ -112,11 +112,12 @@ Chevrons and clear buttons are 14px in `--mute`.
   mark (stroked in `currentColor`, `--ink`) next to the **"Sqrap" wordmark**
   (`.wordmark`). The wordmark is plain type, with no outline or pill around it.
 - **Right** (`.topbar-end`): the search field, then an "About" text link
-  (`.top-link`) that opens the About dialog.
-- Signed out, a "Sign in" `.top-link` follows About. Signed in, a 32px round
+  (`.top-link`) that opens the About dialog, then a "Liked" `.top-link` to
+  `#/liked` (`--ink` while that view is open, `aria-current="page"`).
+- Signed out, a "Sign in" `.top-link` follows Liked. Signed in, a 32px round
   avatar (`.avatar`, the initial on `--chip`, `--surface-2` on hover or while
   open) opens the account menu: a `.menu` right-aligned under it with the email
-  as a `--faint` group label, then "API keys" and "Sign out".
+  as a `--faint` group label, then "Liked", "API keys" and "Sign out".
 - No border, no fill, no shadow.
 
 ### Search (`.search`)
@@ -204,6 +205,12 @@ Site, page and section cards share one shape: a **frame** and a **caption**.
   one main link or button (`.card-main`) stretched over it.
 - **Hover**: the frame border goes to `--line-2` and the image scales to 1.015
   over 0.2s. `prefers-reduced-motion` turns the scale off.
+- **Save** (`.like`): site and page cards carry a 36px round heart button over
+  the frame's top-right corner, 10px in: `--bg` with a `--line` hairline,
+  `--surface` on hover, the 20px heart in `--ink`. It fades in (0.2s) on card
+  hover or focus and stays visible once saved and on touch screens. Saved
+  (`aria-pressed="true"`), the heart icon fills with `--accent`; the button
+  itself never does. Section cards have none.
 
 ### Site page (`#/app/<id>`)
 - **Back link** (`.back`): "← All sites", 14.5px `--mute` text, top-left under
@@ -212,6 +219,7 @@ Site, page and section cards share one shape: a **frame** and a **caption**.
   `--track-display`), the tagline in `--mute` (17px) below it, then a wrapping row
   of fact chips (`.site-facts`, `.chip` in `--ink-2`): the industry with its
   emoji, the country with its flag, and "N pages". It ends in an outlined
+  "Save" chip with a heart (`.like-chip`, "Saved" with an `--accent` heart once saved) and an outlined
   "Visit domain.com ↗" chip (`.chip-outline`: no fill, a `--line-2` border)
   linking to the source. No logo tile, ours or the site's.
 - **Controls** (`.site-controls`), centred: a `.seg` platform switch
@@ -227,8 +235,9 @@ Site, page and section cards share one shape: a **frame** and a **caption**.
 ### Lightbox
 A full-screen `--scrim` with Esc / ← / → and a focus trap; focus returns to the
 card that opened it. The bar: the site name at 500 over a `--mute` caption
-(type · path · platform · "2 of 9", one line with ellipsis), then the domain as a
-`.chip` link on `--chip-dark` with white text, and a round 40px close button.
+(type · path · platform · "2 of 9", one line with ellipsis), then, for a page,
+a "Save" `.chip` (`.lb-like`, the heart `--accent` once saved) and the domain as a
+`.chip` link, both on `--chip-dark` with white text, and a round 40px close button.
 The round prev / next buttons share the `--chip-dark` fill (`--chip-dark-2` on
 hover). The shot sits in a white `--r-lg` frame and scrolls inside it.
 
@@ -253,6 +262,13 @@ display headline, 24px section titles and 17px/500 `h3`s. A copyable snippet
 (`.code-block`) is a muted label with a small outlined `.chip` "Copy" on the
 right, over monospace on `--chip` with `--r-lg` that scrolls sideways inside
 its box rather than widening the page.
+
+### Liked (`#/liked`)
+The site-page header (`.site-head`) reads "Liked" over a `--mute` count line
+("2 sites · 5 pages"), then a "Sites" and a "Pages" `.group-title`, each over the
+browse grid and cards of what was saved. Nothing saved, and signed out, show an
+empty state ("Nothing saved yet" with a "Browse sites" chip; "Sign in to see
+what you saved" with a "Sign in" chip).
 
 ### Empty and error states
 Centred: a display title (28px/500, `--track-display`), a muted line, and a
