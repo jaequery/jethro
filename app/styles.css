@@ -185,21 +185,30 @@ a.chip-outline:hover, button.chip-outline:hover { background: var(--surface); }
 .menu-wrap { position: relative; }
 .menu {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
-  min-width: 200px; max-height: min(420px, 70vh); overflow-y: auto; padding: 6px;
+  min-width: 200px; max-height: min(420px, 70vh); overflow-y: auto; padding: 8px;
   background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-lg);
   box-shadow: var(--shadow-pop);
   display: flex; flex-direction: column;
 }
+/* Items keep their height in a scrolling menu (flex: none). */
 .menu button, .menu a {
-  display: flex; justify-content: space-between; align-items: center; gap: 16px;
-  height: 34px; padding: 0 10px; border: 0; border-radius: var(--r-sm);
+  flex: none; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  height: 38px; padding: 0 12px 0 10px; border: 0; border-radius: var(--r-sm);
   background: none; cursor: pointer; font-size: 14.5px; color: var(--ink); text-align: left;
 }
-.menu button:hover, .menu button:focus-visible, .menu a:hover, .menu a:focus-visible { background: var(--surface); outline: 0; }
-.menu button[aria-checked="true"] { background: var(--surface-2); }
-.menu small { color: var(--faint); font-size: 12.5px; }
-.menu .lbl { display: inline-flex; align-items: center; gap: 8px; }
-.menu-group { padding: 10px 10px 4px; color: var(--faint); font-size: 12.5px; }
+.menu button:hover, .menu a:hover { background: var(--surface); }
+.menu button:focus-visible, .menu a:focus-visible { background: var(--surface); outline-offset: -2px; }
+/* Selected: a 500 label and an --accent check in place of the count, no fill. */
+.menu [aria-checked="true"] .lbl { font-weight: 500; }
+.menu svg.check { width: 16px; height: 16px; stroke: var(--accent); stroke-width: 2; }
+.menu small { color: var(--faint); font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; }
+/* A fixed 20px icon slot, so every label starts at the same x. */
+.menu .lbl { display: inline-flex; align-items: center; gap: 10px; }
+.menu .ico { flex: none; display: grid; place-items: center; width: 20px; height: 20px; }
+.menu .emo { font-size: 16px; line-height: 1; }
+.menu-sep { flex: none; height: 1px; margin: 4px 0; background: var(--line); }
+.menu-group { padding: 10px 12px 4px 10px; color: var(--faint); font-size: 12.5px; }
+.menu:has(.ico) .menu-group { padding-left: 40px; }
 /* Color dot: the fill is the bucket's color (data); the ring keeps white visible. */
 .swatch { flex: none; width: 14px; height: 14px; border-radius: var(--r-pill); box-shadow: inset 0 0 0 1px var(--line-2); }
 
@@ -220,8 +229,8 @@ a.chip-outline:hover, button.chip-outline:hover { background: var(--surface); }
 .sentence .chip .val { color: var(--faint); }
 .sentence .chip.is-set .val, .sentence .chip.noun .val { color: var(--ink); }
 .sentence .caret { font-size: 0.42em; color: var(--faint); margin-left: 0.15em; }
-.sentence .emo { font-size: 0.8em; line-height: 1; }
-.sentence .swatch { width: 0.6em; height: 0.6em; }
+.sentence .chip .emo { font-size: 0.8em; line-height: 1; }
+.sentence .chip .swatch { width: 0.6em; height: 0.6em; }
 /* A set secondary chip and its clear (×) read as one pill. */
 .sentence .has-x {
   display: inline-flex; align-items: stretch; vertical-align: baseline;
