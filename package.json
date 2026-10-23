@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node scripts/db-migrate.js --production-only && next build",
     "start": "next start",
     "db:migrate": "node scripts/db-migrate.js",
     "discover": "node scripts/discover.js",

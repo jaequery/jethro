@@ -1,9 +1,16 @@
 // Applies unapplied db/migrations/*.sql files in filename order. Safe to re-run.
 // Usage: npm run db:migrate   (uses DATABASE_URL_UNPOOLED when set, else DATABASE_URL)
+// --production-only: do nothing unless VERCEL_ENV=production. `vercel-build` passes it,
+// because preview builds share the production database and must not change its schema.
 import "./env.js";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+if (process.argv.includes("--production-only") && process.env.VERCEL_ENV !== "production") {
+  console.log(`skipping migrations: VERCEL_ENV is ${process.env.VERCEL_ENV || "unset"}, not production`);
+  process.exit(0);
+}
 
 // Migrations take the direct connection: DDL through Neon's pooler is fragile.
 if (process.env.DATABASE_URL_UNPOOLED) process.env.DATABASE_URL = process.env.DATABASE_URL_UNPOOLED;

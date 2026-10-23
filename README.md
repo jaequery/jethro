@@ -25,6 +25,14 @@ npm run dev                  # http://localhost:3000
 npm run build && npm start   # production build
 ```
 
+Schema changes ship on merge to main: Vercel builds with `npm run vercel-build`
+(pinned in `vercel.json`), which applies pending `db/migrations/` before
+`next build` when `VERCEL_ENV=production` and fails the deploy if one fails.
+Preview and development builds skip it, because every environment shares one
+database and an unmerged branch must not change the production schema. Write
+migrations so the code still live during the build keeps working (add, don't
+rename or drop in the same deploy).
+
 The project was called Jethro before; every `SQRAP_*` variable still falls back
 to its old `JETHRO_*` name when unset, so existing environments keep working.
 
