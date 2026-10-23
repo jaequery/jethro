@@ -1,9 +1,12 @@
+import { AGENT_CLAIM } from "../lib/claim";
 import "./styles.css";
 
 export const metadata = {
   metadataBase: new URL("https://sqrap.com"),
   title: "Sqrap — design inspiration library",
-  description: "Browse, search and filter real, well-designed websites by page, section, platform and industry.",
+  description: `Browse, search and filter real, well-designed websites by page, section, platform and industry. ${AGENT_CLAIM}`,
+  // For agents: the markdown design catalog and llms.txt.
+  alternates: { types: { "text/markdown": "/designs.md", "text/plain": "/llms.txt" } },
 };
 
 export default function RootLayout({ children }) {

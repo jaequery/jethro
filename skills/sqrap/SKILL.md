@@ -1,6 +1,6 @@
 ---
 name: sqrap
-description: Pull real-website design references from Sqrap (sqrap.com) before designing or building a landing, pricing, signup, about or other marketing page or section (hero, pricing table, FAQ, footer…), or when choosing a palette, a light or dark theme, or the order of sections on a page. Uses the Sqrap MCP tools when connected, or the REST API with a key.
+description: Pull real-website design references from Sqrap (sqrap.com) before designing or building a landing, pricing, signup, about or other marketing page or section (hero, pricing table, FAQ, footer…), or when choosing a palette, a light or dark theme, or the order of sections on a page. Uses the Sqrap MCP tools when connected, the REST API with a key, or the keyless markdown catalog at sqrap.com/designs.md.
 ---
 
 # Sqrap design references
@@ -61,6 +61,13 @@ curl -H "Authorization: Bearer $SQRAP_API_KEY" "https://sqrap.com/api/v1/similar
 
 The spec is at https://sqrap.com/api/v1/openapi.json. Setup for Claude Code,
 Cursor and VS Code: https://sqrap.com/agents.
+
+**Without a key**, fetch the markdown catalog: https://sqrap.com/designs.md
+lists every design with its industry, styles, theme, palette, captured pages
+and design score, filtered by query parameters
+(`?industry=SaaS&style=minimal&theme=dark&pattern=Pricing`), and
+`https://sqrap.com/designs/<domain>.md` gives one design's pages with their
+palettes and sections top to bottom.
 
 ## Rules
 

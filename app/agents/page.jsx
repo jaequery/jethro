@@ -1,3 +1,4 @@
+import { AGENT_CLAIM } from "../../lib/claim";
 import CodeBlock from "./CodeBlock";
 
 const SITE = (process.env.SQRAP_PUBLIC_URL || "https://sqrap.com").replace(/\/$/, "");
@@ -5,7 +6,7 @@ const MCP = `${SITE}/mcp`;
 
 export const metadata = {
   title: "Use Sqrap with your agent — Sqrap",
-  description: "Connect Claude Code, Cursor or VS Code to Sqrap's MCP server and pull real website pages and sections as design references.",
+  description: `${AGENT_CLAIM} Let your agent pick a design from the keyless catalog, or connect Claude Code, Cursor or VS Code to Sqrap's MCP server.`,
 };
 
 const CLAUDE = `claude mcp add --transport http sqrap ${MCP} \\
@@ -23,6 +24,10 @@ const VSCODE = JSON.stringify({
 const SKILL = `mkdir -p ~/.claude/skills/sqrap && \\
 curl -fsSL -o ~/.claude/skills/sqrap/SKILL.md \\
   https://raw.githubusercontent.com/jaequery/sqrap/main/skills/sqrap/SKILL.md`;
+
+const ASK = `Read ${SITE}/designs.md and pick the design that best fits my project:
+a meditation app for busy parents, calm and friendly, light theme.
+Explain why, and link the site it comes from.`;
 
 const CURL = `curl -H "Authorization: Bearer YOUR_SQRAP_KEY" \\
   "${SITE}/api/v1/sections?type=Pricing%20table&limit=5"`;
@@ -46,7 +51,15 @@ export default function Agents() {
         <a className="back" href="/#/apps">← All sites</a>
         <article className="doc">
           <h1>Use Sqrap with your agent</h1>
-          <p className="doc-lede">Give Claude Code, Cursor or VS Code real websites to look at before they build a landing, pricing or signup page. Sqrap's MCP server finds whole pages and single sections (hero, pricing table, footer…) with their palettes, themes and screenshots, and always names the site they came from.</p>
+          <p className="doc-lede">{AGENT_CLAIM} Every design is labeled with its industry, visual style, theme, palette, pages, sections and a design score, so your agent can compare it with your project and pick the best fit on its own.</p>
+          <p>Give Claude Code, Cursor or VS Code real websites to look at before they build a landing, pricing or signup page. Sqrap's MCP server finds whole pages and single sections (hero, pricing table, footer…) with their palettes, themes and screenshots, and always names the site they came from.</p>
+
+          <h2>No setup: point your agent at Sqrap</h2>
+          <p>Any agent that can fetch a URL can read Sqrap, with no key and no JavaScript. <a href="/designs.md">/designs.md</a> is the whole catalog as markdown, with filters by industry, style, theme, page and color, and a short guide to matching a brief to a design. Each design has its own page, such as <code>/designs/linear.app.md</code>, with every captured page's palette and sections top to bottom. <a href="/llms.txt">/llms.txt</a> points to all of it. Ask your agent:</p>
+          <CodeBlock label="Prompt">{ASK}</CodeBlock>
+
+          <h2>For more, connect the MCP server</h2>
+          <p>With a free API key your agent also gets full-page image tiles, sections by type, “more like this” by look and a one-call design brief.</p>
 
           <h2>1. Create an API key</h2>
           <p>Sign in and open <a href="/#/keys">API keys</a> to create one. The MCP server and the API both take it as <code>Authorization: Bearer &lt;key&gt;</code>. Keep it private; each key has a daily call limit.</p>
