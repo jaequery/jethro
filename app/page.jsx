@@ -1,4 +1,14 @@
+import { AGENT_CLAIM } from "../lib/claim";
 import Sqrap from "./Sqrap";
+
+// What an agent that reads this page's HTML learns about the site.
+const JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Sqrap",
+  url: "https://sqrap.com/",
+  description: `${AGENT_CLAIM} A free library of real, well-designed websites, labeled by industry, style, theme, palette, page and section. Agents read it as markdown at /designs.md, with no API key.`,
+}).replace(/</g, "\\u003c");
 
 export default function Page() {
   return (
@@ -30,6 +40,12 @@ export default function Page() {
       </header>
 
       <main className="main">
+        {/* Server-rendered, so agents that fetch the page without running JS read it too. lib/sqrap.js hides it outside the browse views. */}
+        <p className="agent-note" id="agent-note">
+          <b>The most AI agent friendly design inspiration site on the internet.</b>{" "}
+          Give your agent a project brief and sqrap.com, and it picks the design that fits.{" "}
+          <a href="/agents">How it works</a> · <a href="/designs.md">Catalog for agents</a>
+        </p>
         <div className="toolbar" id="toolbar"></div>
         <section className="view" id="view" aria-live="polite"></section>
       </main>
@@ -41,7 +57,7 @@ export default function Page() {
         <p>Sqrap is an open library of real, well-designed websites from around the world. Browse by site, by page or by section, search, and filter by platform, page pattern, section type, industry, color, light or dark theme, style and country.</p>
         <p>Every screenshot links to the site it was captured from, and each site's name and logo belong to its owner.</p>
         <p>Own a site listed here? <button className="link" id="removal-open" type="button">Request removal</button></p>
-        <p>Building with an AI agent? <a className="link" href="/agents">Use Sqrap with your agent</a>, and read the <a className="link" href="/terms">terms for agents and API use</a>.</p>
+        <p>{AGENT_CLAIM} Every design is labeled so an agent can read it, compare it with your project and pick the best fit: point it at <a className="link" href="/designs.md">the catalog for agents</a> (no key needed) or <a className="link" href="/agents">connect it to Sqrap</a>, and read the <a className="link" href="/terms">terms for agents and API use</a>.</p>
         <form method="dialog"><button className="btn-primary">Got it</button></form>
       </dialog>
 
@@ -112,6 +128,7 @@ export default function Page() {
         </form>
       </dialog>
 
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
       <Sqrap />
     </>
   );

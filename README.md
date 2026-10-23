@@ -513,6 +513,34 @@ page on one platform), Pinterest-style, and find them all at `#/liked`.
 
 Not built yet: email verification, password reset and named collections (boards).
 
+## Design catalog for agents (no key)
+
+Sqrap's claim, shown on the home page, in About, on `/agents` and in the
+agent-readable files (`lib/claim.js`): it is the most AI agent friendly design
+inspiration site on the internet. The home page's shell is server-rendered, so
+an agent that fetches it without running JavaScript reads that line, a
+JSON-LD `WebSite` description and links to the catalog.
+
+Any agent that can fetch a URL can pick a design for a project, with no API key
+(`lib/agent-catalog.js`):
+
+- `/designs.md` (`app/designs.md/route.js`): the public sites as markdown, 24 a
+  page (`?page=`), each with its tagline, industry, styles, theme, dominant
+  color, palette, captured page patterns, design score, source URL, an `sm`
+  thumbnail (of a page matching `theme`/`color`/`platform` when set, else the cover) and a link to its own page; filters `q`, `industry`, `style`,
+  `theme`, `pattern`, `platform`, `color`, `country`; a short guide to
+  matching a brief to a design; and every filter value with its count. An
+  unknown value answers 400 with the valid ones.
+- `/designs/<domain or id>.md` (`app/designs/[ref]/route.js`): one public site
+  with the judge's home-page scores and reasons, and each captured desktop page
+  (mobile when there is none) with its theme, palette, sections top to bottom
+  and an `sm` thumbnail. 404 when the site is not public.
+
+Both are the browse API's public data (only public sites, never `full`/`lg`
+shots), cached on the CDN for a minute (so a removal shows within it), and
+not counted against any key. The MCP server and the Agent API below give agents
+more (image tiles, sections by type, similarity, briefs) with a key.
+
 ## Agent API
 
 A read-only, keyed JSON API for scripts and AI agents under `/api/v1/`,
@@ -672,7 +700,8 @@ npx @modelcontextprotocol/inspector --cli https://sqrap.com/mcp --transport http
 Around it: `/agents` (`app/agents/`) is the setup page for Claude Code, Cursor
 and VS Code, linked from About and the API keys dialog; `skills/sqrap/SKILL.md`
 is a Claude Code skill saying when and how to use Sqrap; `/llms.txt`
-(`app/llms.txt/route.js`) describes Sqrap for LLMs; `server.json` is the MCP
+(`app/llms.txt/route.js`) describes Sqrap for LLMs and points to the keyless
+design catalog; `server.json` is the MCP
 Registry entry (`com.sqrap/mcp`), published by the owner with `mcp-publisher`
 after verifying the sqrap.com domain.
 
@@ -706,6 +735,7 @@ after verifying the sqrap.com domain.
 - `app/api/removal/route.js`: public removal requests
 - `app/terms/page.jsx`: the terms for agents and API use
 - `app/mcp/route.js`, `lib/agent-mcp.js`, `app/agents/`, `skills/sqrap/`, `app/llms.txt/route.js`, `server.json`: the MCP server, its setup page, the Claude Code skill, llms.txt and the MCP Registry entry (see MCP server)
+- `app/designs.md/route.js`, `app/designs/[ref]/route.js`, `lib/agent-catalog.js`, `lib/claim.js`: the keyless markdown design catalog for agents and Sqrap's claim (see Design catalog for agents)
 - `app/api/auth/**`, `lib/auth.js`: accounts (see Accounts) and API keys
 - `app/api/likes/**`: saved designs and the Liked view's data (see Saved designs)
 - `lib/embeddings.js`, `pipeline/embed.js`, `scripts/backfill-embeddings.js`: image embeddings and find_similar (see Similarity search)

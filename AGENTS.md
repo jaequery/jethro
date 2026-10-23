@@ -11,7 +11,8 @@ its own name, branding and content. Visitors browse apps and screens, search,
 and filter by platform, UI pattern and industry. Accounts (email/password and Google, see README "Accounts") exist, but
 browsing stays open. Signed-in users can save sites and pages to their Liked view
 (`#/liked`, README "Saved designs"). Signed-in users can
-create API keys for the agent API (README "Agent API").
+create API keys for the agent API (README "Agent API"). Agents without a key read the
+markdown design catalog at `/designs.md` (README "Design catalog for agents").
 
 ## Commands
 
