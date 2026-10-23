@@ -75,7 +75,7 @@ Display headings are weight **500**, never bold. Only the wordmark uses 600.
 | Top bar padding | 24px × `--gutter` | 16px tall padding on phones |
 | Top-bar end gap | 40px | Between search and About; 20px on phones |
 | Brand gap | 10px | Between the mark and the wordmark |
-| Sentence filter | max-width 1100px, centred, ~70px above it | 56px from the sentence's count line to the grid |
+| Sentence filter | max-width 1100px, centred, ~70px above it (the agent note takes the top of that space) | 56px from the sentence's count line to the grid |
 | Site page | Back link, then the header 40px below, controls 48px below it, attribution 20px below, grid 40px below | Header max-width 900px, centred |
 | Browse grid (sites, pages, sections) | 4 columns, 22px column gap, 36px row gap | 3 columns below 1280px, 2 below 960px, 1 below 560px |
 
@@ -142,6 +142,14 @@ A `--chip` track with 4px padding and `--r-pill`. Segments are 30px tall
 buttons with 14px side padding and `--mute` labels. The active segment
 (`aria-pressed="true"`) is `--bg` white with `--ink` text and
 `0 1px 3px rgba(0,0,0,.1)`.
+
+### Agent note (`.agent-note`)
+On the browse views only, one centred 14.5px `--mute` line above the sentence
+states Sqrap's claim to agents: the claim in 500 `--ink`, then links in `--ink`,
+underlined. It sits 24px under the top of the content (16px on phones) and the
+sentence's top padding shrinks to 38px (20px on phones), so the sentence moves
+down only by the line's height. It is server-rendered so agents that fetch the
+page without JavaScript read it.
 
 ### Sentence filter (`.sentence`)
 On the browse views the headline is the filter, a centred sentence whose chips

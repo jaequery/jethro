@@ -1,9 +1,10 @@
 import { designMarkdown } from "../../../lib/agent-catalog";
 import { publicOrigin } from "../../../lib/auth";
 
+// A minute on the CDN absorbs repeat fetches; a removal shows within it.
 export const dynamic = "force-dynamic";
 
-const HEADERS = { "Content-Type": "text/markdown; charset=utf-8", "Cache-Control": "no-store" };
+const HEADERS = { "Content-Type": "text/markdown; charset=utf-8", "Cache-Control": "public, max-age=0, s-maxage=60" };
 
 // /designs/<site id or domain>.md: one design for agents (lib/agent-catalog.js).
 export async function GET(request, { params }) {

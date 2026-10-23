@@ -527,7 +527,7 @@ Any agent that can fetch a URL can pick a design for a project, with no API key
 - `/designs.md` (`app/designs.md/route.js`): the public sites as markdown, 24 a
   page (`?page=`), each with its tagline, industry, styles, theme, dominant
   color, palette, captured page patterns, design score, source URL, an `sm`
-  thumbnail and a link to its own page; filters `q`, `industry`, `style`,
+  thumbnail (of a page matching `theme`/`color`/`platform` when set, else the cover) and a link to its own page; filters `q`, `industry`, `style`,
   `theme`, `pattern`, `platform`, `color`, `country`; a short guide to
   matching a brief to a design; and every filter value with its count. An
   unknown value answers 400 with the valid ones.
@@ -537,8 +537,8 @@ Any agent that can fetch a URL can pick a design for a project, with no API key
   and an `sm` thumbnail. 404 when the site is not public.
 
 Both are the browse API's public data (only public sites, never `full`/`lg`
-shots), uncached like it so a removal takes effect at once, and are not
-counted against any key. The MCP server and the Agent API below give agents
+shots), cached on the CDN for a minute (so a removal shows within it), and
+not counted against any key. The MCP server and the Agent API below give agents
 more (image tiles, sections by type, similarity, briefs) with a key.
 
 ## Agent API
