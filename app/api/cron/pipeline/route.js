@@ -3,6 +3,7 @@ import { queueCounts } from "../../../../lib/db";
 import { embeddingsEnabled } from "../../../../lib/embeddings";
 import { retryPendingPurges } from "../../../../lib/shots";
 import { embedNew } from "../../../../pipeline/embed";
+import { embedNewSiteTexts } from "../../../../lib/site-embeddings";
 import { judgeEnabled, styleNew } from "../../../../pipeline/judge/index";
 import { runPipeline } from "../../../../pipeline/run";
 
@@ -44,6 +45,9 @@ export async function GET(request) {
   const embeddings = embeddingsEnabled()
     ? await embedNew({ limit: EMBED_LIMIT, signal: AbortSignal.timeout(EMBED_MS), log: console.error }).catch((err) => ({ error: err.message }))
     : { skipped: "no AI Gateway credentials" };
+  const siteEmbeddings = embeddingsEnabled()
+    ? await embedNewSiteTexts({ limit: 16, signal: AbortSignal.timeout(30000) }).catch((err) => ({ error: err.message }))
+    : { skipped: "no AI Gateway credentials" };
   // Styles for sites approved before styling existed, or whose style call
   // failed in their own run: a few per run, time-boxed like the embeddings.
   const styles = judgeEnabled()
@@ -51,5 +55,5 @@ export async function GET(request) {
     : { skipped: "no AI credentials" };
   const queued = (await queueCounts()).capture;
   const totals = await runPipeline(RUN, { signal: AbortSignal.timeout(STOP_CLAIMING_MS) });
-  return Response.json({ data: { queued, ...totals, purges, agentUsage, embeddings, styles } }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ data: { queued, ...totals, purges, agentUsage, embeddings, siteEmbeddings, styles } }, { headers: { "Cache-Control": "no-store" } });
 }

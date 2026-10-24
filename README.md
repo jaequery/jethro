@@ -557,6 +557,17 @@ Any agent that can fetch a URL can pick a design for a project, with no API key
   `theme`, `pattern`, `platform`, `color`, `country`; a short guide to
   matching a brief to a design; and every filter value with its count. An
   unknown value answers 400 with the valid ones.
+- Start with `/designs.md?brief=members-only%20daily%20link%20feed%20with%20upvotes`:
+  a nonblank project brief (maximum 1,000 characters) ranks sites by meaning,
+  returning a cosine `match` score and suggested filter links based on the nearest
+  designs' labels. Suggestions are not applied automatically. All existing filters,
+  including keyword `q`, combine with the brief and remain strict. Only sites with
+  text embeddings match; an empty catalog is not a recommendation. Empty/oversized
+  briefs return 400. Anonymous briefs allow 10 requests per peer IP per minute
+  (`x-sqrap-peer`, never `X-Forwarded-For`), with 429 and `Retry-After` when exhausted.
+  Redis counters use the same Marketplace variables as agent quotas; production
+  refuses brief calls with 503 without Redis or during a Redis outage. Local dev
+  without Redis uses bounded in-memory counters. Error responses are not cached.
 - `/designs/<domain or id>.md` (`app/designs/[ref]/route.js`): one public site
   with the judge's home-page scores and reasons, and each captured desktop page
   (mobile when there is none) with its theme, palette, sections top to bottom
@@ -670,6 +681,33 @@ curl -H "Authorization: Bearer $SQRAP_KEY" -H "Content-Type: image/png" --data-b
 ```
 
 ## Design brief
+
+Pass `brief` as free text (1–1,000 characters, nonblank) to rank references by
+meaning, e.g. `design_brief({"brief":"members-only daily link feed with upvotes"})`
+or `GET /api/v1/brief?brief=members-only%20daily%20link%20feed%20with%20upvotes`.
+Each reference includes `match` (cosine text similarity, not a probability) and
+`similarity`. Explicit filters stay strict in text mode, so fewer than five results
+can return. Empty/oversized briefs return 400. An optional `reference` takes
+precedence for visual similarity, even if its image embedding is not ready (then
+quality fallback applies). Without brief/reference the existing quality ranking
+and filter relaxation remain unchanged. Authenticated briefs still cost one call.
+
+Site text vectors (`lib/site-embeddings.js`, migration 012) embed names, taglines,
+descriptions, industries, styles and captured page/section labels using
+`cohere/embed-v4.0` through the same Gateway client as image embeddings. Cron
+refreshes up to 16 sites in 30 seconds per run, including changed metadata via
+fingerprints, and purges nonpublic/opted-out rows. Site removal deletes both image
+and text vectors. Only public sites are returned and image sizes are unchanged.
+
+```sh
+npm run embed:text:backfill                 # paid sample, no stored vectors; cost estimate
+npm run embed:text:backfill -- --yes         # fill/refresh pending site text vectors
+npm run embed:text:backfill -- --yes --limit 32
+```
+
+Uses `DATABASE_URL` and `AI_GATEWAY_API_KEY` (or Vercel OIDC); for worker verification
+use an isolated database and `AI_GATEWAY_BASE_URL` pointing at a local `/embeddings`
+stub with 512-number vectors. Stub runs verify wiring, not real relevance.
 
 `design_brief` (MCP tool, REST `GET /api/v1/brief`, `agentBrief` in
 `lib/agent-api.js`) gathers references for a page an agent is about to build.

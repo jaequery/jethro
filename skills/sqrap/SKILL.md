@@ -28,8 +28,14 @@ Skip private app internals (dashboards, settings, editors): Sqrap captures
 public websites, including community pages, not authenticated-only screens.
 
 For a daily link feed with upvotes, start with
-`{ "pattern": "Feed", "industry": "Community & Social" }` or the keyless
-catalog `https://sqrap.com/designs.md?industry=Community%20%26%20Social&pattern=Feed`.
+`{ "brief": "members-only daily link feed with upvotes" }` or the keyless
+catalog `https://sqrap.com/designs.md?brief=members-only%20daily%20link%20feed%20with%20upvotes`.
+Meaning-ranked results carry cosine `match` scores (not probabilities); follow
+suggested catalog filter links or add explicit filters such as `pattern=Feed` and
+`industry=Community%20%26%20Social`. Filters stay strict in text mode, which can
+return fewer than five references. Briefs must be nonblank and at most 1,000
+characters (400 otherwise); anonymous briefs allow 10 requests per peer IP per
+minute (429 with Retry-After), with successful catalog pages cached for 60 seconds.
 Zero counts mean references are not captured yet; never invent them.
 
 ## How
@@ -40,7 +46,9 @@ Zero counts mean references are not captured yet; never invent them.
 1. `list_filters` once if you are unsure of a filter value (page patterns,
    section types, industries, colors, themes, styles, countries).
 2. `design_brief` to start a page: `{ "pattern": "Pricing", "industry": "SaaS", "theme": "dark", "style": "minimal" }`,
+   or pass a free-text `brief` to rank by meaning with match scores,
    optionally with a `reference` domain to rank by look (`"reference": "linear.app"`).
+   `reference` takes precedence over `brief`; without either, ranking is by quality.
    It returns 5 to 8 references with palette, section order and the judge's
    home-page scores, plus the section order they share. These are facts about
    the references, not advice.

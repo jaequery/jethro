@@ -6,5 +6,6 @@ export const dynamic = "force-dynamic";
 export function GET(request) {
   const sp = new URL(request.url).searchParams;
   const goal = Object.fromEntries([...BRIEF_FILTERS, "reference", "limit"].map((k) => [k, sp.get(k) || ""]));
+  if (sp.has("brief")) goal.brief = sp.get("brief");
   return agentResponse(request, "v1/brief", (origin) => agentBrief(origin, goal));
 }

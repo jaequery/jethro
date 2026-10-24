@@ -19,7 +19,8 @@
     "color:backfill": "node scripts/color-backfill.js",
     "import:sqlite": "node scripts/import-sqlite.js",
     "agent:backfill": "node scripts/backfill-agent.js",
-    "embed:backfill": "node scripts/backfill-embeddings.js"
+    "embed:backfill": "node scripts/backfill-embeddings.js",
+    "embed:text:backfill": "node scripts/backfill-site-embeddings.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
