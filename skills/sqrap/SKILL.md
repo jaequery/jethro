@@ -1,6 +1,6 @@
 ---
 name: sqrap
-description: Pull real-website design references from Sqrap (sqrap.com) before designing or building a landing, pricing, signup, about or other marketing page or section (hero, pricing table, FAQ, footer…), or when choosing a palette, a light or dark theme, or the order of sections on a page. Uses the Sqrap MCP tools when connected, the REST API with a key, or the keyless markdown catalog at sqrap.com/designs.md.
+description: Pull real-website design references from Sqrap (sqrap.com) before designing or building marketing pages, community feeds, posts, profiles, submit forms or leaderboards, or sections (hero, feed list, comments…), palettes, themes or section order. Uses MCP tools, REST with a key, or the keyless markdown catalog at sqrap.com/designs.md.
 ---
 
 # Sqrap design references
@@ -13,14 +13,24 @@ design, not after.
 
 - Before building or redesigning a landing, home, pricing, sign-up, log-in,
   about, careers, blog or docs page.
+- For community-app pages: Feed (ranked/chronological member posts or links),
+  Post (one member post/thread), Profile (user/maker), Submit (posting form),
+  Leaderboard (ranked people/items). Blog/Article mean site-authored editorial content.
 - Before building a single section: navigation, hero, logo cloud, features,
   testimonials, pricing table, FAQ, CTA, stats, team, gallery, newsletter, footer.
+- For Feed list sections (post rows/cards with metadata and voting/ranking
+  controls) or Comments (threaded or flat replies, not testimonials).
 - To pick a palette or a light/dark theme for a product in a given industry.
 - To decide which sections a page needs and in what order (`get_site` lists
   each page's sections top to bottom).
 
-Skip it for app internals (dashboards, settings, editors): Sqrap captures
-public marketing websites.
+Skip private app internals (dashboards, settings, editors): Sqrap captures
+public websites, including community pages, not authenticated-only screens.
+
+For a daily link feed with upvotes, start with
+`{ "pattern": "Feed", "industry": "Community & Social" }` or the keyless
+catalog `https://sqrap.com/designs.md?industry=Community%20%26%20Social&pattern=Feed`.
+Zero counts mean references are not captured yet; never invent them.
 
 ## How
 

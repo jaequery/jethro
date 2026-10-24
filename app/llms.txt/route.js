@@ -19,6 +19,8 @@ ${AGENT_CLAIM} Browse it at ${o}/. Agents read the whole catalog as markdown wit
 
 ## For agents with a key
 
+For community-app briefs, use industry=Community%20%26%20Social and pattern=Feed (member posts/links), Post (a member thread, not an editorial Article), Profile, Submit or Leaderboard. Section types include Feed list (with vote/rank controls) and Comments. Start at ${o}/designs.md?industry=Community%20%26%20Social&pattern=Feed; zero counts mean no captured references yet.
+
 - [Use Sqrap with your agent](${o}/agents): setup for Claude Code, Cursor and VS Code, and a Claude Code skill
 - [MCP server](${o}/mcp): Streamable HTTP, \`Authorization: Bearer <key>\`; tools design_brief, search_screens, search_sections, get_site, find_similar, list_filters
 - [OpenAPI spec](${o}/api/v1/openapi.json): the REST API at ${o}/api/v1

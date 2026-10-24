@@ -5,6 +5,11 @@ import { getDomain } from "tldts";
 // Ordered by how much we want each one. `pattern` is a PAGE_PATTERNS value
 // (lib/taxonomy.js) stored as a hint on the page; the AI judge may overwrite it.
 const PAGE_TYPES = [
+  { pattern: "Feed", route: /^\/(feed|feeds|new|newest|top|best|front|frontpage|popular)(\/[^/?]+)?$/i },
+  { pattern: "Post", route: /^\/(item\?id=\d+|posts?\/[^/?]+|s\/[^/?]+(\/[^/?]+)?|t\/[^/?]+(\/\d+)?|comments\/[^/?]+(\/[^/?]+)?)$/i },
+  { pattern: "Profile", route: /^\/(user\?id=[A-Za-z0-9_-]+|(?:users?|profiles?|u|members?|makers?)\/[^/?]+|@[^/?]+)$/i },
+  { pattern: "Submit", route: /^\/(submit|create-post|new-post|posts\/new)$/i },
+  { pattern: "Leaderboard", route: /^\/(leaderboards?|leaders|rankings|topusers)$/i },
   { pattern: "Pricing", re: /\b(pricing|prices|plans?|tarif[es]*|preise|precios)\b/ },
   { pattern: "Sign up", re: /\b(sign[-_ ]?up|register|get[-_ ]?started|start[-_ ]?free|join|create[-_ ]?account|try[-_ ]?(it[-_ ]?)?free)\b/ },
   { pattern: "Log in", re: /\b(log[-_ ]?in|sign[-_ ]?in|signin|login|account)\b/ },
@@ -46,8 +51,14 @@ export function pickSubpages(links, homeUrl, max = 8) {
     // Only the site's own host (or its www twin): app. and docs. subdomains are
     // often bare apps, and pages are keyed by path alone.
     if (u.hostname.replace(/^www\./, "") !== home.hostname.replace(/^www\./, "")) continue;
-    const path = u.pathname.replace(/\/+$/, "") || "/";
+    let path = u.pathname.replace(/\/+$/, "") || "/";
     if (path === "/" || path.split("/").length > 4) continue;
+
+    if (path === "/item" || path === "/user") {
+      const id = u.searchParams.get("id") || "";
+      if (!(path === "/item" ? /^\d{1,30}$/ : /^[A-Za-z0-9_-]{1,80}$/).test(id)) continue;
+      path += `?id=${encodeURIComponent(id)}`;
+    }
 
     const entry = byPath.get(path) ?? { url: `${u.origin}${path}`, path, texts: new Set() };
     if (text) entry.texts.add(text.toLowerCase());
@@ -59,6 +70,13 @@ export function pickSubpages(links, homeUrl, max = 8) {
     let best = null;
     for (const entry of byPath.values()) {
       if (chosen.some((c) => c.url === entry.url)) continue;
+      if (type.route) {
+        if (type.route.test(entry.path) && !(type.pattern === "Post" && entry.path === "/posts/new")) {
+          best = entry;
+          break;
+        }
+        continue;
+      }
       // The first path segment names the section of the site: /changelog/new-product is a changelog entry.
       const pathHit = type.re.test(entry.path.toLowerCase().split("/")[1]);
       const textHit = [...entry.texts].some((t) => t.length <= 30 && type.re.test(t));

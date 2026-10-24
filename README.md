@@ -12,6 +12,32 @@ domain that has opted out. The browse UI reads the database through the route
 handlers below, and shows only `approved` sites whose domain is not in
 `optouts`.
 
+## Community and app taxonomy
+
+`lib/taxonomy.js` is the shared vocabulary for browse filters, the judge,
+markdown catalog, Agent API, MCP and OpenAPI. Community pages use **Feed**
+(ranked/chronological member posts or links), **Post** (one member post/thread),
+**Profile** (user/maker), **Submit** (posting form) and **Leaderboard** (ranked
+people/items). **Blog** and **Article** remain site-authored editorial content.
+**Feed list** sections include post metadata and voting/ranking controls;
+**Comments** sections contain replies. **Community & Social** covers forums,
+link aggregators, launch communities and social apps. Filters and the catalog
+list these values even at zero captures; this does not imply available designs.
+
+For a daily upvote feed, fetch
+`/designs.md?industry=Community%20%26%20Social&pattern=Feed`, or pass those filters
+to `design_brief` / `search_screens`. Discovery prioritizes feed, post, profile,
+submit and leaderboard routes before marketing subpages; HN-style `/item?id=`
+and `/user?id=` links retain their identifying query parameter.
+
+Existing sites keep their labels: no migration or library-wide judging is needed.
+For one already-captured site, `npm run judge -- --retag <domain>` updates page
+patterns and section types only; `--dry-run` previews those tags without writes.
+To also update industry, `npm run judge -- <domain> --dry-run` previews the home
+judgement; `npm run judge -- <domain>` saves it and styles/tags the site if approved
+(it can change approval status). These commands require captured images and AI
+credentials; do not re-judge the whole catalog for this additive vocabulary.
+
 ## Run it
 
 Sqrap is a Next.js app (App Router). Node 20.9 or newer.

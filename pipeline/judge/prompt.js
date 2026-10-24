@@ -32,6 +32,7 @@ verdict_reasons: up to 3 short reasons for the overall score, the most important
 - tagline: at most 60 characters, an original one-line description of what the site is. Write it yourself; never copy the site's marketing headline or slogan.
 - description: at most 200 characters, original wording, what the product or organization does.
 - industry: exactly one of: ${INDUSTRIES.join(", ")}. Use "Other" only when nothing fits.
+- Community & Social means forums, link aggregators, launch communities and social apps centered on member posts, discussion or voting; use Media & Publishing for site-authored editorial publications instead.
 - country: the ISO 3166-1 alpha-2 code of the country the organization is based in, from the domain, language, address or currency on screen; null when you cannot tell.
 - language: the BCP-47 tag of the main language of the page text (for example "en", "de", "pt-BR").`;
 
@@ -42,7 +43,9 @@ You are shown one page of a website: first the top of the page at desktop width,
 - pattern: what kind of page this is, exactly one of: ${PAGE_PATTERNS.join(", ")}. The page path is a strong hint.
 - sections: one entry for every section crop shown, with its id copied exactly and its type, exactly one of: ${SECTION_TYPES.join(", ")}.
 
-Section types: Navigation is a header or menu bar; Hero is the large opening statement of the page; Logo cloud is a row of customer or partner logos; Features explains product capabilities; Testimonials are quotes or reviews; Pricing table compares plans; FAQ is questions and answers; CTA is a closing call to action; Stats are big numbers; Team shows people; Gallery is a grid of images or work; Newsletter is an email sign-up; Footer is the bottom links area. Use "Other" for anything else (articles, forms, product grids, legal text).`;
+Page patterns: Feed is a ranked or chronological list of member posts, links or items, including a community home page (choose Feed, not Home). Post is one member post or discussion thread with its comments. Profile is a user or maker page. Submit is a form for posting a link or contribution. Leaderboard ranks people or items by score or achievement, rather than showing a normal post feed. Blog lists editorial content published by the site itself; Article is one such editorial piece. Do not tag community feeds as Blog or member threads as Article. Classify the visible page, not just its URL.
+
+Section types: Navigation is a header or menu bar; Hero is the large opening statement of the page; Logo cloud is a row of customer or partner logos; Features explains product capabilities; Testimonials are quotes or reviews; Pricing table compares plans; FAQ is questions and answers; CTA is a closing call to action; Stats are big numbers; Team shows people; Gallery is a grid of images or work; Newsletter is an email sign-up; Footer is the bottom links area. Feed list is rows or cards of member posts/links/items with metadata such as author, time, score and comment count; include their voting/ranking controls in Feed list, not a separate section type. Comments is a discussion/replies area, threaded or flat, not testimonials. Use "Other" for anything else (articles, forms, product grids, legal text).`;
 
 export const STYLE_SYSTEM = `You are tagging the visual style of websites for Sqrap, a design-inspiration library of real websites. Designers and AI agents filter the library by these styles ("dark, minimal", "editorial"), so pick what a designer would call the site's look at a glance.
 
