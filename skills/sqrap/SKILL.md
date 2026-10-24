@@ -49,7 +49,8 @@ Zero counts mean references are not captured yet; never invent them.
    or pass a free-text `brief` to rank by meaning with match scores,
    optionally with a `reference` domain to rank by look (`"reference": "linear.app"`).
    `reference` takes precedence over `brief`; without either, ranking is by quality.
-   It returns 5 to 8 references with palette, section order and the judge's
+   Reference/quality mode returns 5 to 8 references when available; text mode
+   returns up to the limit without relaxing explicit filters. References include palette, section order and the judge's
    home-page scores, plus the section order they share. These are facts about
    the references, not advice.
 3. `search_screens` for whole pages, e.g. `{ "pattern": "Pricing", "industry": "SaaS", "theme": "dark", "style": "editorial" }`,

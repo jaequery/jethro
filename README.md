@@ -591,7 +591,7 @@ needed; `lib/openapi.js`, keep it in step with the routes). The MCP server wraps
 | `GET /api/v1/screens` | Page screenshots |
 | `GET /api/v1/sections` | Page sections (`section` or `type` picks the type) |
 | `GET /api/v1/filters` | Every filter value with its count |
-| `GET /api/v1/brief` | A design brief: 5 to 8 references for a page (see Design brief) |
+| `GET /api/v1/brief` | Design references ranked by free-text brief, visual reference, or quality (see Design brief) |
 | `GET /api/v1/similar?id=…` | Sections or screens of other sites that look like a section or screen (see Similarity search) |
 | `POST /api/v1/similar` | The same for an uploaded screenshot (body `image/*` or multipart field `image`, at most 2 MB; counts as 5 calls) |
 
@@ -712,9 +712,9 @@ stub with 512-number vectors. Stub runs verify wiring, not real relevance.
 `design_brief` (MCP tool, REST `GET /api/v1/brief`, `agentBrief` in
 `lib/agent-api.js`) gathers references for a page an agent is about to build.
 The goal is any of `pattern`, `industry`, `theme`, `style` and `platform`, plus
-an optional `reference` (a site domain, or a site, section or screen id) and
+an optional `brief` or `reference` (a site domain, or a site, section or screen id) and
 `limit` (5 to 8, default 6). It returns public sites with a screen matching the
-filters, most similar to the reference's home page first (image embeddings, see
+filters. Without a text-only brief, sites are most similar to the reference's home page first (image embeddings, see
 Similarity search) or else the judge's best first. When fewer than 5 match,
 filters are dropped (style, then theme, industry, pattern) and the list is
 topped up; `relaxed` says which, on the brief and on each added reference.
@@ -743,7 +743,7 @@ before any MCP handling) and calls the same reads directly, not over HTTP.
 | `search_sections` | Single sections by `type`, `q` and the same filters |
 | `get_site` | One site by id or domain: its pages with theme, palette and image URLs, and each page's sections in order |
 | `find_similar` | Sections or screens that look like a result (`id`) or a base64 screenshot (`image`, at most 2 MB, counts as 5 calls) |
-| `design_brief` | 5 to 8 references for a page: the goal's filters, ranked by similarity to a `reference` or by the judge (see Design brief) |
+| `design_brief` | References ranked by the meaning of `brief`, visual similarity to `reference`, or the judge; explicit filters stay strict in text mode (see Design brief) |
 | `list_filters` | Every filter value with its count |
 
 Each tool call is charged to the key's daily quota and, when it succeeds,
